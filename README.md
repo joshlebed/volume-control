@@ -1,4 +1,4 @@
-# volume-project
+# volume-control
 
 raspberry pi python service to change the receiver volume on keyboard input from
 USB volume knob
