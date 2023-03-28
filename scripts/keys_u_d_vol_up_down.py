@@ -2,6 +2,14 @@ import logging
 import time
 import traceback
 import lirc
+from lirc.exceptions import (
+    LircError,
+    LircdSocketError,
+    LircdConnectionError,
+    LircdInvalidReplyPacketError,
+    LircdCommandFailureError,
+    UnsupportedOperatingSystemError
+)
 
 client = lirc.Client()
 
@@ -9,22 +17,33 @@ BTN_CH_SEL = "BTN_CH_SEL"
 BTN_LEVEL_MINUS = "BTN_LEVEL_MINUS"
 BTN_LEVEL_PLUS = "BTN_LEVEL_PLUS"
 HOLD_TIME = 3.5
+ONKYO_REMOTE_ID = "onkyo"
+DISCO_LIGHT_REMOTE_ID = "ADJ-REMOTE"
+
+CompoundException = (
+    LircError,
+    LircdSocketError,
+    LircdConnectionError,
+    LircdInvalidReplyPacketError,
+    LircdCommandFailureError,
+    UnsupportedOperatingSystemError
+)
 
 
-def send_to_onkyo(msg):
-    client.send_once("onkyo", msg)
+def send_to_remote(remote_id, msg):
+    client.send_once(remote_id, msg)
 
 
 def send_to_onkyo_then_sleep(msg, times=1):
     for _ in range(times):
-        send_to_onkyo(msg)
+        send_to_remote(ONKYO_REMOTE_ID, msg)
         time.sleep(.2)
 
 
 def press_and_hold_to_onkyo(msg, seconds=0):
-    client.send_start("onkyo", msg)
+    client.send_start(ONKYO_REMOTE_ID, msg)
     time.sleep(seconds)
-    client.send_stop("onkyo", msg)
+    client.send_stop(ONKYO_REMOTE_ID, msg)
     time.sleep(.2)
 
 
@@ -34,21 +53,15 @@ while True:
         print("vol down")
         try:
             client.send_once("onkyo", "KEY_VOLUMEDOWN")
-        except lirc.exceptions.LircdCommandFailureError as error:
-            print("Unable to send pause command")
-            print(error)  # Error has more info on what lircd sent back.
-        except:
-            print("unknown error")
+        except CompoundException:
+            logging.error(traceback.format_exc())
 
     elif a == "u":
         print("vol up")
         try:
             client.send_once("onkyo", "KEY_VOLUMEUP")
-        except lirc.exceptions.LircdCommandFailureError as error:
-            print("Unable to send pause command")
-            print(error)  # Error has more info on what lircd sent back.
-        except:
-            print("unknown error")
+        except CompoundException:
+            logging.error(traceback.format_exc())
 
     elif a == "k-off":
         print("turning kitchen speakers off")
@@ -57,12 +70,8 @@ while True:
             press_and_hold_to_onkyo(BTN_LEVEL_MINUS, HOLD_TIME)
             send_to_onkyo_then_sleep(BTN_CH_SEL, 1)
             press_and_hold_to_onkyo(BTN_LEVEL_MINUS, HOLD_TIME)
-        except lirc.exceptions.LircdCommandFailureError as error:
-            print("Unable to send pause command")
-            print(error)  # Error has more info on what lircd sent back.
-        except Exception as e:
+        except CompoundException:
             logging.error(traceback.format_exc())
-            print("unknown error")
 
     elif a == "k-on":
         print("turning kitchen speakers on")
@@ -73,9 +82,19 @@ while True:
             send_to_onkyo_then_sleep(BTN_CH_SEL, 1)
             press_and_hold_to_onkyo(BTN_LEVEL_PLUS, HOLD_TIME)
             send_to_onkyo_then_sleep(BTN_LEVEL_MINUS, 4)
-        except lirc.exceptions.LircdCommandFailureError as error:
-            print("Unable to send pause command")
-            print(error)  # Error has more info on what lircd sent back.
-        except Exception as e:
+        except CompoundException:
             logging.error(traceback.format_exc())
-            print("unknown error")
+
+    elif a == "disco-off":
+        print("turning disco spotlight off")
+        try:
+            print("a")
+        except CompoundException:
+            logging.error(traceback.format_exc())
+
+    elif a == "disco-on":
+        print("turning disco spotlight on")
+        try:
+            print("a")
+        except CompoundException:
+            logging.error(traceback.format_exc())

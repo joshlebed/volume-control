@@ -7,6 +7,8 @@ USB volume knob
 
 <!-- TODO: -->
 
+- FOR NETWORKING: https://community.home-assistant.io/t/remote-access-with-docker/314345
+
 try this:
 https://stackoverflow.com/a/49873529/7090159
 https://docs.docker.com/storage/
@@ -17,7 +19,22 @@ other option: ssh in from HASSIO and execute python script
 - https://community.home-assistant.io/t/run-command-on-docker-container-from-supervised-hassio/235083/3
 - pros and cons?
 
-## usb volume knob service
+## keyboard media controller script
+
+### buttons:
+
+```
+ 1 | 2 | 3
+---┼---┼---
+ 4 | 5 | 6
+
+1 - vol up
+2 - toggle sound mode: all channel stereo vs direct
+3 - toggle input: dj mode vs tv mode
+4 - vol down
+5 - yellow disco light
+6 - toggle kitchen speakers: on vs off
+```
 
 ### quickstart
 
@@ -30,7 +47,16 @@ tail -f /home/pi/code/pipes/ir-commands-pipe | sh & disown
 
 ```bash
 python3 volume_controller_evdev_lirc.py
-tail -f /home/pi/code/pipes/ir-commands-pipe | sh
+tail -f /home/pi/code/pipes/ir-commands-pipe | sh     # what is this line doing
+```
+
+### debugging input devices
+
+look in `/dev/input/by-id`
+get inputs with:
+
+```bash
+sudo cat /dev/input/*
 ```
 
 ### old version
@@ -64,6 +90,8 @@ TODO:
 - how do I get new codes from a remote?
 
 ## LIRC notes
+
+### adding new IR codes workflow:
 
 - https://www.lirc.org/html/configuration-guide.html#appendix-10
 - https://raspberrypi.stackexchange.com/questions/104008/lirc-irrecord-wont-record-buster-mode2-works
