@@ -39,14 +39,13 @@ other option: ssh in from HASSIO and execute python script
 ### quickstart
 
 ```bash
-python3 ~/code/volume-control/volume_controller_evdev_lirc.py 1>/dev/null 2>/dev/null & disown
-tail -f /home/pi/code/pipes/ir-commands-pipe | sh & disown
+nohup python3 ~/code/volume-control/scripts/volume_controller_evdev_lirc.py & disown
 ```
 
 ### run in foreground for debugging
 
 ```bash
-python3 volume_controller_evdev_lirc.py
+python3 ~/code/volume-control/scripts/volume_controller_evdev_lirc.py
 tail -f /home/pi/code/pipes/ir-commands-pipe | sh     # what is this line doing
 ```
 
