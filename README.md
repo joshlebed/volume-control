@@ -39,7 +39,7 @@ other option: ssh in from HASSIO and execute python script
 ### quickstart
 
 ```bash
-nohup python3 ~/code/volume-control/scripts/volume_controller_evdev_lirc.py & disown
+nohup python3.11 ~/code/volume-control/scripts/volume_controller_evdev_lirc.py &> /tmp/nohup.out & disown
 ```
 
 ### run in foreground for debugging
@@ -89,6 +89,11 @@ TODO:
 - how do I get new codes from a remote?
 
 ## LIRC notes
+
+### general notes
+
+this looks like a good guide:
+https://stackoverflow.com/questions/57437261/setup-ir-remote-control-using-lirc-for-the-raspberry-pi-rpi
 
 ### adding new IR codes workflow:
 
