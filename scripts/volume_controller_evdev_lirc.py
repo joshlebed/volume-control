@@ -7,18 +7,13 @@ import asyncio
 import logging
 import time
 import traceback
+from logging.handlers import RotatingFileHandler
 
 import evdev
 import lirc
-from lirc.exceptions import (
-    LircdCommandFailureError,
-    LircdConnectionError,
-    LircdInvalidReplyPacketError,
-    LircdSocketError,
-    LircError,
-    UnsupportedOperatingSystemError,
-)
-
+from lirc.exceptions import (LircdCommandFailureError, LircdConnectionError,
+                             LircdInvalidReplyPacketError, LircdSocketError,
+                             LircError, UnsupportedOperatingSystemError)
 
 # TODO: refactor these into enums
 BTN_CH_SEL = "BTN_CH_SEL"
@@ -52,6 +47,27 @@ F3_CODE = 61
 F4_CODE = 62
 F5_CODE = 63
 F6_CODE = 64
+ESCAPE_CODE = 1
+TAB_CODE = 15
+EQUALS_CODE = 13
+NUM_LOCK_CODE = 69
+SLASH_CODE = 98
+STAR_CODE = 55
+BACKSPACE_CODE = 14
+NUM_7_CODE = 71
+NUM_8_CODE = 72
+NUM_9_CODE = 73
+MINUS_CODE = 74
+NUM_4_CODE = 75
+NUM_5_CODE = 76
+NUM_6_CODE = 77
+PLUS_CODE = 78
+NUM_1_CODE = 79
+NUM_2_CODE = 80
+NUM_3_CODE = 81
+NUM_0_CODE = 82
+PERIOD_CODE = 83
+ENTER_CODE = 96
 
 # my custom triggers
 VOLUME_UP_TRIGGER = F1_CODE
@@ -69,6 +85,15 @@ CompoundException = (
     LircdCommandFailureError,
     UnsupportedOperatingSystemError,
 )
+
+
+log_file = '/tmp/volume_controller.log'
+my_handler = RotatingFileHandler(log_file, mode='a', maxBytes=5*1024*1024, 
+                                backupCount=2, encoding=None, delay=0)
+my_handler.setLevel(logging.DEBUG)
+logger = logging.getLogger('root')
+logger.setLevel(logging.DEBUG)
+logger.addHandler(my_handler)
 
 
 # singleton pattern
@@ -106,11 +131,12 @@ class Remote:
         try:
             command()
         except CompoundException:
-            logging.error(traceback.format_exc())
+            logger.error(traceback.format_exc())
+            # self.client.send_stop()
 
     # VOLUME CONTROLS
     def start_holding_volume_down(self):
-        logging.info("volume down")
+        logger.info("volume down")
         if self.busy:
             return
         self.busy = True
@@ -119,7 +145,7 @@ class Remote:
         )
 
     def start_holding_volume_up(self):
-        logging.info("volume up")
+        logger.info("volume up")
         if self.busy:
             return
         self.busy = True
@@ -128,7 +154,7 @@ class Remote:
         )
 
     def stop_holding_volume_button(self):
-        logging.info("done with volume buttons")
+        logger.info("done with volume buttons")
         if not self.busy:
             return
         self.wrap_lirc_exceptions(lambda: self.client.send_stop())
@@ -136,25 +162,25 @@ class Remote:
 
     # RECEIVER INPUT
     def switch_to_dj_mode(self):
-        logging.info("switching to dj mode")
+        logger.info("switching to dj mode")
         self.press_and_hold_to_onkyo(
             ONKYO_VOLUME_DOWN_MESSAGE, VOLUME_ALL_THE_WAY_HOLD_TIME
         )
         self.send_to_onkyo_then_sleep(ONKYO_DJ_INPUT_MESSAGE)
         self.press_and_hold_to_onkyo(ONKYO_VOLUME_UP_MESSAGE, VOLUME_0_TO_60_HOLD_TIME)
-        logging.info("done switching to dj mode")
+        logger.info("done switching to dj mode")
 
     def switch_to_tv_mode(self):
-        logging.info("switching to tv mode")
+        logger.info("switching to tv mode")
         self.press_and_hold_to_onkyo(
             ONKYO_VOLUME_DOWN_MESSAGE, VOLUME_ALL_THE_WAY_HOLD_TIME
         )
         self.send_to_onkyo_then_sleep(ONKYO_TV_INPUT_MESSAGE)
         self.press_and_hold_to_onkyo(ONKYO_VOLUME_UP_MESSAGE, VOLUME_0_TO_30_HOLD_TIME)
-        logging.info("done switching to tv mode")
+        logger.info("done switching to tv mode")
 
     def toggle_input_tv_to_dj(self):
-        logging.info("toggling input between tv/dj")
+        logger.info("toggling input between tv/dj")
         if self.busy:
             return
         self.busy = True
@@ -172,32 +198,32 @@ class Remote:
 
     # KITCHEN SPEAKERS
     def turn_kitchen_speakers_off(self):
-        logging.info("turning kitchen speakers off")
+        logger.info("turning kitchen speakers off")
         try:
             self.send_to_onkyo_then_sleep(BTN_CH_SEL, 5)
             self.press_and_hold_to_onkyo(BTN_LEVEL_MINUS, KITCHEN_SPEAKERS_HOLD_TIME)
             self.send_to_onkyo_then_sleep(BTN_CH_SEL, 1)
             self.press_and_hold_to_onkyo(BTN_LEVEL_MINUS, KITCHEN_SPEAKERS_HOLD_TIME)
         except CompoundException:
-            logging.error(traceback.format_exc())
-        logging.info("done turning kitchen speakers off")
+            logger.error(traceback.format_exc())
+        logger.info("done turning kitchen speakers off")
 
     def turn_kitchen_speakers_on(self):
-        logging.info("turning kitchen speakers on")
+        logger.info("turning kitchen speakers on")
         self.send_to_onkyo_then_sleep(BTN_CH_SEL, 5)
         self.press_and_hold_to_onkyo(BTN_LEVEL_PLUS, KITCHEN_SPEAKERS_HOLD_TIME)
         self.send_to_onkyo_then_sleep(BTN_LEVEL_MINUS, 4)
         self.send_to_onkyo_then_sleep(BTN_CH_SEL, 1)
         self.press_and_hold_to_onkyo(BTN_LEVEL_PLUS, KITCHEN_SPEAKERS_HOLD_TIME)
         self.send_to_onkyo_then_sleep(BTN_LEVEL_MINUS, 4)
-        logging.info("done turning kitchen speakers on")
+        logger.info("done turning kitchen speakers on")
 
     def clear_menu_state(self):
-        logging.info("clearing menu state")
+        logger.info("clearing menu state")
         self.send_to_onkyo_then_sleep(KEY_SETUP, 2)
 
     def toggle_kitchen_speakers(self):
-        logging.info("toggling kitchen speakers on/off")
+        logger.info("toggling kitchen speakers on/off")
         if self.busy:
             return
 
@@ -216,19 +242,19 @@ class Remote:
 
     # SURROUND SOUND MODE
     def switch_to_all_channel_stereo(self):
-        logging.info("switching to all channel stereo")
+        logger.info("switching to all channel stereo")
         self.send_to_onkyo_then_sleep(ONKYO_STEREO_MESSAGE)
         self.send_to_onkyo_then_sleep(ONKYO_LISTENING_MODE_LEFT, 4)
-        logging.info("done switching to all channel stereo")
+        logger.info("done switching to all channel stereo")
 
     def switch_to_direct(self):
-        logging.info("switching to direct")
+        logger.info("switching to direct")
         self.send_to_onkyo_then_sleep(ONKYO_STEREO_MESSAGE)
         self.send_to_onkyo_then_sleep(ONKYO_LISTENING_MODE_LEFT)
-        logging.info("done switching to direct")
+        logger.info("done switching to direct")
 
     def toggle_surround_mode(self):
-        logging.info("toggling surround mode between all channel stereo and direct")
+        logger.info("toggling surround mode between all channel stereo and direct")
         if self.busy:
             return
         self.busy = True
@@ -246,19 +272,19 @@ class Remote:
 
     # DISCO BALL RED/YELLOW MODE
     def turn_disco_ball_yellow(self):
-        logging.info("turning disco ball to single color yellow mode")
+        logger.info("turning disco ball to single color yellow mode")
         self.send_to_disco_light_then_sleep("COLOR")
         self.send_to_disco_light_then_sleep("2")
-        logging.info("done turning disco ball to single color yellow mode")
+        logger.info("done turning disco ball to single color yellow mode")
 
     def turn_disco_ball_red(self):
-        logging.info("turning disco ball to single color red mode")
+        logger.info("turning disco ball to single color red mode")
         self.send_to_disco_light_then_sleep("COLOR")
         self.send_to_disco_light_then_sleep("1")
-        logging.info("done turning disco ball to single color red mode")
+        logger.info("done turning disco ball to single color red mode")
 
     def toggle_disco_ball_red_yellow(self):
-        logging.info("toggling disco spotlight between red and yellow")
+        logger.info("toggling disco spotlight between red and yellow")
         if self.busy:
             return
         self.busy = True
@@ -279,27 +305,30 @@ def custom_exception_handler(loop, context):
     loop.default_exception_handler(context)
 
     exception = context.get("exception")
-    logging.info("IN THE HANDLER, HERE'S THE EXCEPTION (type first, then exception):")
-    logging.info(type(exception))
-    logging.exception(exception)
+    logger.info("IN THE HANDLER, HERE'S THE EXCEPTION (type first, then exception):")
+    logger.info(type(exception))
+    logger.exception(exception)
 
     if isinstance(exception, OSError):
         print(context)
-        logging.info(
+        logger.info(
             "the above printed error is an OSError, which is probably the keyboard being disconnected"
         )
         loop.stop()
 
-    logging.info("DONE WITH HANDLER")
+    logger.info("DONE WITH HANDLER")
 
 
 async def handle_events(device: evdev.InputDevice, remote: Remote):
     async for event in device.async_read_loop():
         if event.type == evdev.ecodes.EV_KEY:
-            # logging.info("GOT EVENT:")
-            # logging.info(evdev.categorize(event))
-            # logging.info(event.value)
-            # logging.info(event.code)
+            # logger.info("GOT EVENT:")
+            # logger.info(evdev.categorize(event))
+            # logger.info(event.value)
+            # logger.info(event.code)
+
+            # TODO: handle these async on new threads so we can keep handling keyboard input
+            # this will fix the queueing problem and allow for a kill switch
 
             # push key event
             if event.value == 1:
@@ -325,7 +354,7 @@ async def handle_events(device: evdev.InputDevice, remote: Remote):
 
 
 async def listen_to_keyboard_events(remote):
-    logging.info("starting asyncio event loop")
+    logger.info("starting asyncio event loop")
 
     async with asyncio.TaskGroup() as tg:
         for path_to_device in [
@@ -333,21 +362,25 @@ async def listen_to_keyboard_events(remote):
             "/dev/input/by-id/usb-1189_8890-if02-event-kbd",
             "/dev/input/by-id/usb-1189_8890-event-kbd",
             "/dev/input/by-id/usb-1189_8890-if03-event-mouse",
+            "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-kbd", # good
+            "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-if01-event-mouse", # good (probably unnecessary)
+            "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-if01", # good (probably unnecessary)
+            # "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-if01-mouse", # breaks
         ]:
             tg.create_task(handle_events(evdev.InputDevice(path_to_device), remote))
 
     # loop = asyncio.get_event_loop()
     # loop.set_exception_handler(custom_exception_handler)
     # loop.run_forever()
-    logging.info(
+    logger.info(
         "if we get here, that means we gracefully caught an exception in"
         + "custom_exception_handler. we can let this function return"
     )
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logging.info("starting up volume control server")
+
+    logger.info("starting up volume control server")
     client = lirc.Client()
     remote = Remote(client)
 
@@ -355,92 +388,35 @@ if __name__ == "__main__":
         try:
             asyncio.run(listen_to_keyboard_events(remote))
         except ExceptionGroup as e_group:
-            logging.info("caught ExceptionGroup. parsing")
+            logger.info("caught ExceptionGroup. parsing")
 
             if len(e_group.exceptions) < 1:
-                logging.info("caught empty ExceptionGroup. quitting")
-                logging.exception(e_group)
+                logger.info("caught empty ExceptionGroup. quitting")
+                logger.exception(e_group)
                 break
 
             e = e_group.exceptions[0]
 
             if isinstance(e, FileNotFoundError):
-                logging.info(
+                logger.info(
                     "caught FileNotFoundError, that probably means"
                     + "the keyboard was unplugged at startup:"
                 )
-                logging.exception(e)
-                logging.info(
+                logger.exception(e)
+                logger.info(
                     f"waiting {RETRY_TIME_SECONDS} seconds and then trying again"
                 )
                 time.sleep(RETRY_TIME_SECONDS)
             if isinstance(e, OSError):
-                logging.info(
+                logger.info(
                     "caught OSError, that probably means the keyboard got unplugged:"
                 )
-                logging.exception(e)
-                logging.info(
+                logger.exception(e)
+                logger.info(
                     f"waiting {RETRY_TIME_SECONDS} seconds and then trying again"
                 )
                 time.sleep(RETRY_TIME_SECONDS)
             else:
-                logging.info("caught some other type of error. quitting")
-                logging.exception
+                logger.info("caught some other type of error. quitting")
+                logger.exception
                 break
-
-
-# unused
-
-
-def input_loop():
-    while True:
-        a = input("next command (u or d): ")
-        if a == "d":
-            logging.info("vol down")
-            try:
-                client.send_once("onkyo", "KEY_VOLUMEDOWN")
-            except CompoundException:
-                logging.error(traceback.format_exc())
-
-        elif a == "u":
-            logging.info("vol up")
-            try:
-                client.send_once("onkyo", "KEY_VOLUMEUP")
-            except CompoundException:
-                logging.error(traceback.format_exc())
-
-        elif a == "k-off":
-            logging.info("turning kitchen speakers off")
-            try:
-                send_to_onkyo_then_sleep(BTN_CH_SEL, 5)
-                press_and_hold_to_onkyo(BTN_LEVEL_MINUS, KITCHEN_SPEAKERS_HOLD_TIME)
-                send_to_onkyo_then_sleep(BTN_CH_SEL, 1)
-                press_and_hold_to_onkyo(BTN_LEVEL_MINUS, KITCHEN_SPEAKERS_HOLD_TIME)
-            except CompoundException:
-                logging.error(traceback.format_exc())
-
-        elif a == "k-on":
-            logging.info("turning kitchen speakers on")
-            try:
-                send_to_onkyo_then_sleep(BTN_CH_SEL, 5)
-                press_and_hold_to_onkyo(BTN_LEVEL_PLUS, KITCHEN_SPEAKERS_HOLD_TIME)
-                send_to_onkyo_then_sleep(BTN_LEVEL_MINUS, 4)
-                send_to_onkyo_then_sleep(BTN_CH_SEL, 1)
-                press_and_hold_to_onkyo(BTN_LEVEL_PLUS, KITCHEN_SPEAKERS_HOLD_TIME)
-                send_to_onkyo_then_sleep(BTN_LEVEL_MINUS, 4)
-            except CompoundException:
-                logging.error(traceback.format_exc())
-
-        elif a == "disco-off":
-            logging.info("turning disco spotlight off")
-            try:
-                logging.info("a")
-            except CompoundException:
-                logging.error(traceback.format_exc())
-
-        elif a == "disco-on":
-            logging.info("turning disco spotlight on")
-            try:
-                logging.info("a")
-            except CompoundException:
-                logging.error(traceback.format_exc())

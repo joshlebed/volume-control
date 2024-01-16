@@ -23,6 +23,8 @@ other option: ssh in from HASSIO and execute python script
 
 ### buttons:
 
+#### OG 6 button wired macropad
+
 ```
  1 | 2 | 3
 ---┼---┼---
@@ -36,10 +38,59 @@ other option: ssh in from HASSIO and execute python script
 6 - toggle kitchen speakers: on vs off
 ```
 
+#### wireless numpad
+
+```
+ESC| X |TAB| =
+---┼---┼---┼---
+NUM| / | * |<-
+---┼---┼---┼---
+ 7 | 8 | 9 | -
+---┼---┼---┼---
+ 4 | 5 | 6 | +
+---┼---┼---┼---
+ 1 | 2 | 3 |
+---┴---┼---┤RET
+   0   | . |
+
+[not implemented yet]
+
+ESC - turn TV off?
+X - can't remap this button
+TAB - spotify dark mode?
+= -
+NUM -
+/ -
+* -
+<- -
+7 -
+8 -
+9 -
+- -
+4 -
+5 -
+6 -
++ -
+1 - DJ mode
+2 - TV mode
+3 -
+0 -
+. -
+RET -
+```
+
 ### quickstart
+
+start in background
 
 ```bash
 nohup python3.11 ~/code/volume-control/scripts/volume_controller_evdev_lirc.py &> /tmp/nohup.out & disown
+```
+
+watch the logs
+
+```bash
+tail -f /tmp/volume_controller.log
 ```
 
 ### run in foreground for debugging
@@ -62,13 +113,6 @@ sudo cat /dev/input/*
 
 ```bash
 sudo python3 volume_controller_lirc.py
-```
-
-## terminal volume commands
-
-```bash
-irsend SEND_ONCE onkyo KEY_VOLUMEUP
-irsend SEND_ONCE onkyo KEY_VOLUMEDOWN
 ```
 
 ## keylogger info
@@ -94,6 +138,20 @@ TODO:
 
 this looks like a good guide:
 https://stackoverflow.com/questions/57437261/setup-ir-remote-control-using-lirc-for-the-raspberry-pi-rpi
+
+this is also a pretty good guide:
+https://www.instructables.com/Setup-IR-Remote-Control-Using-LIRC-for-the-Raspber/
+
+## terminal volume commands
+
+```bash
+irsend SEND_ONCE onkyo KEY_VOLUMEUP
+irsend SEND_ONCE onkyo KEY_VOLUMEDOWN
+```
+
+## debugging ir emitter
+
+- check this: `sudo vi /boot/config.txt` - it should be
 
 ### adding new IR codes workflow:
 
