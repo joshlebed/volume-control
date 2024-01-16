@@ -1,23 +1,6 @@
 # volume-control
 
-raspberry pi python service to change the receiver volume on keyboard input from
-USB volume knob
-
-## notes
-
-<!-- TODO: -->
-
-- FOR NETWORKING: https://community.home-assistant.io/t/remote-access-with-docker/314345
-
-try this:
-https://stackoverflow.com/a/49873529/7090159
-https://docs.docker.com/storage/
-https://learn.microsoft.com/en-us/windows/win32/ipc/named-pipes
-
-other option: ssh in from HASSIO and execute python script
-
-- https://community.home-assistant.io/t/run-command-on-docker-container-from-supervised-hassio/235083/3
-- pros and cons?
+python service to send IR commands to AV receiver and other IR devices based on keyboard input
 
 ## keyboard media controller script
 
@@ -178,3 +161,19 @@ irsend SEND_ONCE onkyo KEY_VOLUMEDOWN
   ```
   systemctl restart lircd.service
   ```
+
+## notes
+
+<!-- TODO: -->
+
+- FOR NETWORKING: https://community.home-assistant.io/t/remote-access-with-docker/314345
+
+try this:
+https://stackoverflow.com/a/49873529/7090159
+https://docs.docker.com/storage/
+https://learn.microsoft.com/en-us/windows/win32/ipc/named-pipes
+
+other option: ssh in from HASSIO and execute python script
+
+- https://community.home-assistant.io/t/run-command-on-docker-container-from-supervised-hassio/235083/3
+- pros and cons?
