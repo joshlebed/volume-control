@@ -1,7 +1,1 @@
-{
-  // "python.linting.enabled": true,
-  // "[python]": {
-  //   "editor.defaultFormatter": "ms-python.black-formatter"
-  // },
-  // "python.linting.pylintEnabled": true
-}
+{}

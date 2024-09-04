@@ -2,12 +2,11 @@
 docstring
 """
 
-
 import asyncio
-from enum import Enum
 import logging
 import time
 import traceback
+from enum import Enum
 from logging.handlers import RotatingFileHandler
 
 import evdev
@@ -35,14 +34,17 @@ ONKYO_STEREO_MESSAGE = "STEREO"
 ONKYO_LISTENING_MODE_LEFT = "BTN_LISTENINGMODE_LEFT"
 ONKYO_LISTENING_MODE_RIGHT = "BTN_LISTENINGMODE_RIGHT"
 
-class DISCO_LIGHT_COLOR(Enum):
+
+class DiscoLightColor(Enum):
     WHITE = "WHITE"
     RED = "RED"
     YELLOW = "YELLOW"
 
-class RECEIVER_INPUT_SOURCE(Enum):
+
+class ReceiverInputSource(Enum):
     TV = "TV"
     DJ = "DJ"
+
 
 # other constants
 RETRY_TIME_SECONDS = 5
@@ -106,13 +108,14 @@ CompoundException = (
 )
 
 
-log_file = '/tmp/volume_controller.log'
-my_handler = RotatingFileHandler(log_file, mode='a', maxBytes=5*1024*1024, 
-                                backupCount=2, encoding=None, delay=0)
-my_handler.setLevel(logging.DEBUG)
-logger = logging.getLogger('root')
+LOG_FILE = "/tmp/volume_controller.log"
+MY_HANDLER = RotatingFileHandler(
+    LOG_FILE, mode="a", maxBytes=5 * 1024 * 1024, backupCount=2, encoding=None, delay=0
+)
+MY_HANDLER.setLevel(logging.DEBUG)
+logger = logging.getLogger("root")
 logger.setLevel(logging.DEBUG)
-logger.addHandler(my_handler)
+logger.addHandler(MY_HANDLER)
 
 
 # singleton pattern
@@ -123,9 +126,9 @@ class Remote:
         self.dj_mode = False
         self.kitchen_speakers_on = True
         self.direct_mode = True
-        self.disco_light_color = DISCO_LIGHT_COLOR.RED
+        self.disco_light_color = DiscoLightColor.RED
         self.is_disco_light_on = False
-        self.receiver_input_source = RECEIVER_INPUT_SOURCE.TV
+        self.receiver_input_source = ReceiverInputSource.TV
 
     # TODO: add wrap_with_busy
 
@@ -139,7 +142,7 @@ class Remote:
             self.client.send_once(remote_id, msg)
         except CompoundException:
             logger.error(traceback.format_exc())
-        
+
         self.busy = False
 
     def send_to_remote_then_sleep(self, remote_id, msg, times):
@@ -165,7 +168,6 @@ class Remote:
 
         self.busy = False
 
-
     # VOLUME CONTROLS
     def start_holding_volume_down(self):
         logger.info("volume down")
@@ -187,7 +189,7 @@ class Remote:
         logger.info("done with volume buttons")
         if not self.busy:
             return
-        
+
         self.client.send_stop()
         self.busy = False
 
@@ -195,7 +197,7 @@ class Remote:
     def switch_to_dj_mode(self):
         logger.info("switching to dj mode")
 
-        self.receiver_input_source = RECEIVER_INPUT_SOURCE.DJ
+        self.receiver_input_source = ReceiverInputSource.DJ
 
         self.press_and_hold_to_onkyo(
             ONKYO_VOLUME_DOWN_MESSAGE, VOLUME_ALL_THE_WAY_HOLD_TIME
@@ -208,21 +210,21 @@ class Remote:
     def switch_to_tv_mode(self):
         logger.info("switching to tv mode")
 
-        self.receiver_input_source = RECEIVER_INPUT_SOURCE.TV
+        self.receiver_input_source = ReceiverInputSource.TV
 
         self.press_and_hold_to_onkyo(
             ONKYO_VOLUME_DOWN_MESSAGE, VOLUME_ALL_THE_WAY_HOLD_TIME
         )
         self.send_to_onkyo_then_sleep(ONKYO_TV_INPUT_MESSAGE)
         self.press_and_hold_to_onkyo(ONKYO_VOLUME_UP_MESSAGE, VOLUME_0_TO_30_HOLD_TIME)
-        
+
         logger.info("done switching to tv mode")
 
     def toggle_input_tv_to_dj(self):
         logger.info("toggling input between tv/dj")
         self.clear_menu_state()
 
-        if self.receiver_input_source == RECEIVER_INPUT_SOURCE.TV:
+        if self.receiver_input_source == ReceiverInputSource.TV:
             self.switch_to_dj_mode()
 
         else:
@@ -259,7 +261,7 @@ class Remote:
 
         self.clear_menu_state()
 
-        if self.kitchen_speakers_on == False:
+        if not self.kitchen_speakers_on:
             self.turn_kitchen_speakers_on()
             self.kitchen_speakers_on = True
 
@@ -285,7 +287,7 @@ class Remote:
 
         self.clear_menu_state()
 
-        if self.direct_mode == False:
+        if not self.direct_mode:
             self.switch_to_direct()
             self.direct_mode = True
 
@@ -295,21 +297,21 @@ class Remote:
 
     # DISCO LIGHT CONTROLS
     def turn_disco_light_white(self):
-        self.disco_light_color = DISCO_LIGHT_COLOR.WHITE
+        self.disco_light_color = DiscoLightColor.WHITE
         logger.info("turning disco light to single color white mode")
         self.send_to_disco_light_then_sleep("COLOR")
         self.send_to_disco_light_then_sleep("9")
         logger.info("done turning disco light to single color yellow mode")
 
     def turn_disco_light_yellow(self):
-        self.disco_light_color = DISCO_LIGHT_COLOR.YELLOW
+        self.disco_light_color = DiscoLightColor.YELLOW
         logger.info("turning disco light to single color yellow mode")
         self.send_to_disco_light_then_sleep("COLOR")
         self.send_to_disco_light_then_sleep("2")
         logger.info("done turning disco light to single color yellow mode")
 
     def turn_disco_light_red(self):
-        self.disco_light_color = DISCO_LIGHT_COLOR.RED
+        self.disco_light_color = DiscoLightColor.RED
         logger.info("turning disco light to single color red mode")
         self.send_to_disco_light_then_sleep("COLOR")
         self.send_to_disco_light_then_sleep("1")
@@ -328,7 +330,7 @@ class Remote:
     def toggle_disco_light_red_yellow(self):
         logger.info("toggling disco spotlight between red and yellow")
 
-        if self.disco_light_color == DISCO_LIGHT_COLOR.YELLOW:
+        if self.disco_light_color == DiscoLightColor.YELLOW:
             self.turn_disco_light_red()
 
         else:
@@ -351,7 +353,8 @@ def custom_exception_handler(loop, context):
     if isinstance(exception, OSError):
         print(context)
         logger.info(
-            "the above printed error is an OSError, which is probably the keyboard being disconnected"
+            "the above printed error is an OSError,"
+            + " which is probably the keyboard being disconnected"
         )
         loop.stop()
 
@@ -359,8 +362,9 @@ def custom_exception_handler(loop, context):
 
 
 async def handle_events(device: evdev.InputDevice, remote: Remote):
+    logger.info("evdev.ecodes.EV_KEY")
     async for event in device.async_read_loop():
-        if event.type == evdev.ecodes.EV_KEY:
+        if event.type == evdev.ecodes.ecodes["EV_KEY"]:
             # logger.info("GOT EVENT:")
             # logger.info(evdev.categorize(event))
             # logger.info(event.value)
@@ -371,9 +375,15 @@ async def handle_events(device: evdev.InputDevice, remote: Remote):
 
             # push key event
             if event.value == 1:
-                if event.code == MACROPAD_VOLUME_DOWN_TRIGGER or event.code == NUMPAD_VOLUME_DOWN_TRIGGER:
+                if (
+                    event.code == MACROPAD_VOLUME_DOWN_TRIGGER
+                    or event.code == NUMPAD_VOLUME_DOWN_TRIGGER
+                ):
                     remote.start_holding_volume_down()
-                if event.code == MACROPAD_VOLUME_UP_TRIGGER or event.code == NUMPAD_VOLUME_UP_TRIGGER:
+                if (
+                    event.code == MACROPAD_VOLUME_UP_TRIGGER
+                    or event.code == NUMPAD_VOLUME_UP_TRIGGER
+                ):
                     remote.start_holding_volume_up()
                 if event.code == MACROPAD_TOGGLE_DJ_TV_MODE_TRIGGER:
                     remote.toggle_input_tv_to_dj()
@@ -396,12 +406,17 @@ async def handle_events(device: evdev.InputDevice, remote: Remote):
                 if event.code == NUMPAD_DISCO_LIGHT_TOGGLE_TRIGGER:
                     remote.toggle_disco_light_power()
 
-
             # release key event
             if event.value == 0:
-                if event.code == MACROPAD_VOLUME_DOWN_TRIGGER or event.code == NUMPAD_VOLUME_DOWN_TRIGGER:
+                if (
+                    event.code == MACROPAD_VOLUME_DOWN_TRIGGER
+                    or event.code == NUMPAD_VOLUME_DOWN_TRIGGER
+                ):
                     remote.stop_holding_volume_button()
-                if event.code == MACROPAD_VOLUME_UP_TRIGGER or event.code == NUMPAD_VOLUME_UP_TRIGGER:
+                if (
+                    event.code == MACROPAD_VOLUME_UP_TRIGGER
+                    or event.code == NUMPAD_VOLUME_UP_TRIGGER
+                ):
                     remote.stop_holding_volume_button()
 
 
@@ -414,9 +429,9 @@ async def listen_to_keyboard_events(remote):
             "/dev/input/by-id/usb-1189_8890-if02-event-kbd",
             "/dev/input/by-id/usb-1189_8890-event-kbd",
             "/dev/input/by-id/usb-1189_8890-if03-event-mouse",
-            "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-kbd", # good
-            "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-if01-event-mouse", # good (probably unnecessary)
-            "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-if01", # good (probably unnecessary)
+            "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-kbd",  # good
+            "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-if01-event-mouse",  # good (probably unnecessary)
+            "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-if01",  # good (probably unnecessary)
             # "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-if01-mouse", # breaks
         ]:
             tg.create_task(handle_events(evdev.InputDevice(path_to_device), remote))
@@ -430,11 +445,10 @@ async def listen_to_keyboard_events(remote):
     )
 
 
-if __name__ == "__main__":
-
+def main():
     logger.info("starting up volume control server")
-    client = lirc.Client()
-    remote = Remote(client)
+    lirc_client = lirc.Client()
+    remote = Remote(lirc_client)
 
     while True:
         try:
@@ -447,6 +461,7 @@ if __name__ == "__main__":
                 logger.exception(e_group)
                 break
 
+            # not sure why linter complains about this line
             e = e_group.exceptions[0]
 
             if isinstance(e, FileNotFoundError):
@@ -472,3 +487,7 @@ if __name__ == "__main__":
                 logger.info("caught some other type of error. quitting")
                 logger.exception
                 break
+
+
+if __name__ == "__main__":
+    main()
