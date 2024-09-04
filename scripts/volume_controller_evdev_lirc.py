@@ -6,33 +6,55 @@ import asyncio
 import logging
 import time
 import traceback
-from enum import Enum
+from enum import Enum, StrEnum
 from logging.handlers import RotatingFileHandler
 
 import evdev
 import lirc
-from lirc.exceptions import (LircdCommandFailureError, LircdConnectionError,
-                             LircdInvalidReplyPacketError, LircdSocketError,
-                             LircError, UnsupportedOperatingSystemError)
+from lirc.exceptions import (
+    LircdCommandFailureError,
+    LircdConnectionError,
+    LircdInvalidReplyPacketError,
+    LircdSocketError,
+    LircError,
+    UnsupportedOperatingSystemError,
+)
 
-# TODO: refactor these into enums
-BTN_CH_SEL = "BTN_CH_SEL"
-BTN_LEVEL_MINUS = "BTN_LEVEL_MINUS"
-BTN_LEVEL_PLUS = "BTN_LEVEL_PLUS"
-KEY_SETUP = "KEY_SETUP"
-KITCHEN_SPEAKERS_HOLD_TIME = 3.5
-VOLUME_ALL_THE_WAY_HOLD_TIME = 10
-VOLUME_0_TO_60_HOLD_TIME = 7.5
-VOLUME_0_TO_30_HOLD_TIME = 3.9
-ONKYO_REMOTE_ID = "onkyo"
-DISCO_LIGHT_REMOTE_ID = "ADJ-REMOTE"
-ONKYO_VOLUME_DOWN_MESSAGE = "KEY_VOLUMEDOWN"
-ONKYO_VOLUME_UP_MESSAGE = "KEY_VOLUMEUP"
-ONKYO_TV_INPUT_MESSAGE = "BTN_1"
-ONKYO_DJ_INPUT_MESSAGE = "BTN_2"
-ONKYO_STEREO_MESSAGE = "STEREO"
-ONKYO_LISTENING_MODE_LEFT = "BTN_LISTENINGMODE_LEFT"
-ONKYO_LISTENING_MODE_RIGHT = "BTN_LISTENINGMODE_RIGHT"
+
+class RemoteID(StrEnum):
+    ONKYO = "onkyo"
+    DISCO_LIGHT = "ADJ-REMOTE"
+
+
+class OnkyoButton(StrEnum):
+    KEY_POWER = "KEY_POWER"
+    BTN_1 = "BTN_1"
+    BTN_2 = "BTN_2"
+    BTN_3 = "BTN_3"
+    BTN_4 = "BTN_4"
+    BTN_5 = "BTN_5"
+    BTN_6 = "BTN_6"
+    BTN_7 = "BTN_7"
+    BTN_8 = "BTN_8"
+    BTN_9 = "BTN_9"
+    KEY_VOLUMEDOWN = "KEY_VOLUMEDOWN"
+    KEY_VOLUMEUP = "KEY_VOLUMEUP"
+    STEREO = "STEREO"
+    SURROUND = "SURROUND"
+    BTN_LISTENINGMODE_LEFT = "BTN_LISTENINGMODE_LEFT"
+    BTN_LISTENINGMODE_RIGHT = "BTN_LISTENINGMODE_RIGHT"
+    BTN_CH_SEL = "BTN_CH_SEL"
+    BTN_LEVEL_MINUS = "BTN_LEVEL_MINUS"
+    BTN_LEVEL_PLUS = "BTN_LEVEL_PLUS"
+    KEY_SETUP = "KEY_SETUP"
+    KEY_TV_POWER = "KEY_TV_POWER"
+
+
+class HoldTime(Enum):
+    KITCHEN_SPEAKERS = 3.5
+    VOLUME_ALL_THE_WAY = 10
+    VOLUME_0_TO_60 = 7.5
+    VOLUME_0_TO_30 = 3.9
 
 
 class DiscoLightColor(Enum):
@@ -151,19 +173,19 @@ class Remote:
             time.sleep(0.2)
 
     def send_to_onkyo_then_sleep(self, msg, times=1):
-        self.send_to_remote_then_sleep(ONKYO_REMOTE_ID, msg, times)
+        self.send_to_remote_then_sleep(RemoteID.ONKYO, msg, times)
 
     def send_to_disco_light_then_sleep(self, msg, times=1):
-        self.send_to_remote_then_sleep(DISCO_LIGHT_REMOTE_ID, msg, times)
+        self.send_to_remote_then_sleep(RemoteID.DISCO_LIGHT, msg, times)
 
     def press_and_hold_to_onkyo(self, msg, seconds=0):
         if self.busy:
             return
         self.busy = True
 
-        self.client.send_start(ONKYO_REMOTE_ID, msg)
+        self.client.send_start(RemoteID.ONKYO, msg)
         time.sleep(seconds)
-        self.client.send_stop(ONKYO_REMOTE_ID, msg)
+        self.client.send_stop(RemoteID.ONKYO, msg)
         time.sleep(0.2)
 
         self.busy = False
@@ -175,7 +197,7 @@ class Remote:
             return
         self.busy = True
 
-        self.client.send_start(ONKYO_REMOTE_ID, ONKYO_VOLUME_DOWN_MESSAGE)
+        self.client.send_start(RemoteID.ONKYO, OnkyoButton.KEY_VOLUMEDOWN)
 
     def start_holding_volume_up(self):
         logger.info("volume up")
@@ -183,7 +205,7 @@ class Remote:
             return
         self.busy = True
 
-        self.client.send_start(ONKYO_REMOTE_ID, ONKYO_VOLUME_UP_MESSAGE)
+        self.client.send_start(RemoteID.ONKYO, OnkyoButton.KEY_VOLUMEUP)
 
     def stop_holding_volume_button(self):
         logger.info("done with volume buttons")
@@ -200,10 +222,10 @@ class Remote:
         self.receiver_input_source = ReceiverInputSource.DJ
 
         self.press_and_hold_to_onkyo(
-            ONKYO_VOLUME_DOWN_MESSAGE, VOLUME_ALL_THE_WAY_HOLD_TIME
+            OnkyoButton.KEY_VOLUMEDOWN, HoldTime.VOLUME_ALL_THE_WAY
         )
-        self.send_to_onkyo_then_sleep(ONKYO_DJ_INPUT_MESSAGE)
-        self.press_and_hold_to_onkyo(ONKYO_VOLUME_UP_MESSAGE, VOLUME_0_TO_60_HOLD_TIME)
+        self.send_to_onkyo_then_sleep(OnkyoButton.KEY_TV_POWER)
+        self.press_and_hold_to_onkyo(OnkyoButton.KEY_VOLUMEUP, HoldTime.VOLUME_0_TO_60)
 
         logger.info("done switching to dj mode")
 
@@ -213,10 +235,10 @@ class Remote:
         self.receiver_input_source = ReceiverInputSource.TV
 
         self.press_and_hold_to_onkyo(
-            ONKYO_VOLUME_DOWN_MESSAGE, VOLUME_ALL_THE_WAY_HOLD_TIME
+            OnkyoButton.KEY_VOLUMEDOWN, HoldTime.VOLUME_ALL_THE_WAY
         )
-        self.send_to_onkyo_then_sleep(ONKYO_TV_INPUT_MESSAGE)
-        self.press_and_hold_to_onkyo(ONKYO_VOLUME_UP_MESSAGE, VOLUME_0_TO_30_HOLD_TIME)
+        self.send_to_onkyo_then_sleep(OnkyoButton.KEY_TV_POWER)
+        self.press_and_hold_to_onkyo(OnkyoButton.KEY_VOLUMEUP, HoldTime.VOLUME_0_TO_30)
 
         logger.info("done switching to tv mode")
 
@@ -234,27 +256,35 @@ class Remote:
     def turn_kitchen_speakers_off(self):
         logger.info("turning kitchen speakers off")
         try:
-            self.send_to_onkyo_then_sleep(BTN_CH_SEL, 5)
-            self.press_and_hold_to_onkyo(BTN_LEVEL_MINUS, KITCHEN_SPEAKERS_HOLD_TIME)
-            self.send_to_onkyo_then_sleep(BTN_CH_SEL, 1)
-            self.press_and_hold_to_onkyo(BTN_LEVEL_MINUS, KITCHEN_SPEAKERS_HOLD_TIME)
+            self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 5)
+            self.press_and_hold_to_onkyo(
+                OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS
+            )
+            self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 1)
+            self.press_and_hold_to_onkyo(
+                OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS
+            )
         except CompoundException:
             logger.error(traceback.format_exc())
         logger.info("done turning kitchen speakers off")
 
     def turn_kitchen_speakers_on(self):
         logger.info("turning kitchen speakers on")
-        self.send_to_onkyo_then_sleep(BTN_CH_SEL, 5)
-        self.press_and_hold_to_onkyo(BTN_LEVEL_PLUS, KITCHEN_SPEAKERS_HOLD_TIME)
-        self.send_to_onkyo_then_sleep(BTN_LEVEL_MINUS, 4)
-        self.send_to_onkyo_then_sleep(BTN_CH_SEL, 1)
-        self.press_and_hold_to_onkyo(BTN_LEVEL_PLUS, KITCHEN_SPEAKERS_HOLD_TIME)
-        self.send_to_onkyo_then_sleep(BTN_LEVEL_MINUS, 4)
+        self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 5)
+        self.press_and_hold_to_onkyo(
+            OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS
+        )
+        self.send_to_onkyo_then_sleep(OnkyoButton.BTN_LEVEL_MINUS, 4)
+        self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 1)
+        self.press_and_hold_to_onkyo(
+            OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS
+        )
+        self.send_to_onkyo_then_sleep(OnkyoButton.BTN_LEVEL_MINUS, 4)
         logger.info("done turning kitchen speakers on")
 
     def clear_menu_state(self):
         logger.info("clearing menu state")
-        self.send_to_onkyo_then_sleep(KEY_SETUP, 2)
+        self.send_to_onkyo_then_sleep(OnkyoButton.KEY_SETUP, 2)
 
     def toggle_kitchen_speakers(self):
         logger.info("toggling kitchen speakers on/off")
@@ -272,14 +302,14 @@ class Remote:
     # SURROUND SOUND MODE
     def switch_to_all_channel_stereo(self):
         logger.info("switching to all channel stereo")
-        self.send_to_onkyo_then_sleep(ONKYO_STEREO_MESSAGE)
-        self.send_to_onkyo_then_sleep(ONKYO_LISTENING_MODE_LEFT, 4)
+        self.send_to_onkyo_then_sleep(OnkyoButton.STEREO)
+        self.send_to_onkyo_then_sleep(OnkyoButton.BTN_LISTENINGMODE_LEFT, 4)
         logger.info("done switching to all channel stereo")
 
     def switch_to_direct(self):
         logger.info("switching to direct")
-        self.send_to_onkyo_then_sleep(ONKYO_STEREO_MESSAGE)
-        self.send_to_onkyo_then_sleep(ONKYO_LISTENING_MODE_LEFT)
+        self.send_to_onkyo_then_sleep(OnkyoButton.STEREO)
+        self.send_to_onkyo_then_sleep(OnkyoButton.BTN_LISTENINGMODE_LEFT)
         logger.info("done switching to direct")
 
     def toggle_surround_mode(self):
@@ -485,7 +515,7 @@ def main():
                 time.sleep(RETRY_TIME_SECONDS)
             else:
                 logger.info("caught some other type of error. quitting")
-                logger.exception
+                logger.exception(e)
                 break
 
 
