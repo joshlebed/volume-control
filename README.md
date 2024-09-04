@@ -38,28 +38,28 @@ NUM| / | * |<-
 
 [not implemented yet]
 
-ESC - turn TV off?
+ESC - cancel current command (TODO)
 X - can't remap this button
-TAB - spotify dark mode?
-= -
+TAB - spotify dark mode (TODO)
+= - turn TV off (TODO)
 NUM -
 / -
 * -
-<- -
+<- - disco light white
 7 -
 8 -
 9 -
-- -
-4 -
-5 -
+- - disco light yellow
+4 - DJ mode
+5 - TV mode
 6 -
-+ -
-1 - DJ mode
-2 - TV mode
++ - disco light red
+1 - volume down
+2 - volume up
 3 -
 0 -
 . -
-RET -
+RET - disco light on/off
 ```
 
 ### quickstart
@@ -76,11 +76,19 @@ watch the logs
 tail -f /tmp/volume_controller.log
 ```
 
+### terminal aliases
+
+add this line to your `.zshrc` or `.bashrc` to get some useful aliases:
+
+```bash
+source [PATH_TO_THIS_REPO]/scripts/shell-aliases.sh
+source /home/pi/code/volume-control/scripts/shell-aliases.sh
+```
+
 ### run in foreground for debugging
 
 ```bash
 python3 ~/code/volume-control/scripts/volume_controller_evdev_lirc.py
-tail -f /home/pi/code/pipes/ir-commands-pipe | sh     # what is this line doing
 ```
 
 ### debugging input devices
@@ -177,3 +185,5 @@ other option: ssh in from HASSIO and execute python script
 
 - https://community.home-assistant.io/t/run-command-on-docker-container-from-supervised-hassio/235083/3
 - pros and cons?
+
+figure out how to apply `automated-commands.cron`, and add instructions to README
