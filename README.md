@@ -67,7 +67,7 @@ RET - disco light on/off
 start in background
 
 ```bash
-nohup python3.11 ~/code/volume-control/scripts/volume_controller_evdev_lirc.py &> /tmp/nohup.out & disown
+nohup python3.11 ~/code/volume-control/scripts/volume_control.py &> /tmp/nohup.out & disown
 ```
 
 watch the logs
@@ -88,7 +88,7 @@ source /home/pi/code/volume-control/scripts/shell-aliases.sh
 ### run in foreground for debugging
 
 ```bash
-python3 ~/code/volume-control/scripts/volume_controller_evdev_lirc.py
+python3 ~/code/volume-control/scripts/volume_control.py
 ```
 
 ### debugging input devices
@@ -111,7 +111,7 @@ sudo python3 volume_controller_lirc.py
 https://github.com/kernc/logkeys
 `sudo logkeys --start --output test.log --device event4`
 `sudo logkeys --start --device event4`
-`python3 ~/code/volume-control/volume_controller_evdev_lirc.py`
+`python3 ~/code/volume-control/volume_control.py`
 
 IR emitter module pinout:
 VCC goes to 5v power - green -> brown
@@ -149,26 +149,59 @@ irsend SEND_ONCE onkyo KEY_VOLUMEDOWN
 - https://www.lirc.org/html/configuration-guide.html#appendix-10
 - https://raspberrypi.stackexchange.com/questions/104008/lirc-irrecord-wont-record-buster-mode2-works
 
-  - /boot/config.txt
-  - see:
+for a new device, you'll need to follow this guide to tweak some config settings and get LIRC working
 
-  ```
-  dtoverlay=gpio-ir,gpio_pin=17
-  dtoverlay=gpio-ir-tx,gpio_pin=18
-  ```
+- https://stackoverflow.com/questions/57437261/setup-ir-remote-control-using-lirc-for-the-raspberry-pi-rpi
 
-  - this means the ir receiver is on pin 17, and the transmitter is on pin 18
-  - for recording new codes, use irrecord
+#### edit the boot config to switch from transmit to receive
 
-  ```
-  irrecord -u -n -d /dev/lirc1 code/onkyo_GOOD.lircd.conf
-  ```
+```bash
+sudo vim /boot/config.txt
+```
 
-  - add those remote codes in `/etc/lirc/lircd.conf.d/`
+near the end, find this (or add it if it's not there):
 
-  ```
-  systemctl restart lircd.service
-  ```
+```conf
+# this line should be uncommented for receiver to work
+dtoverlay=gpio-ir,gpio_pin=17
+# this line should be uncommented for transmitter to work
+dtoverlay=gpio-ir-tx,gpio_pin=18
+```
+
+then check the config:
+
+```bash
+sudo systemctl stop lircd.service
+sudo systemctl start lircd.service
+sudo systemctl status lircd.service
+```
+
+and reboot
+
+```bash
+sudo reboot
+```
+
+#### record codes
+
+stop LIRCD if it's running:
+
+```bash
+sudo systemctl stop lircd.service
+```
+
+then use irrecord to create a remote config:
+
+```bash
+sudo irrecord -u -n -d /dev/lirc[probably 0 or 1] ~/code/[remote_name].lircd.conf
+```
+
+add those remote codes to this repo in `remotes/*.lird.conf`, then copy to the
+`/etc/lirc/lircd.conf.d/` dir so they get picked up by LIRCD. then restart LIRCD:
+
+```bash
+systemctl restart lircd.service
+```
 
 ## notes
 

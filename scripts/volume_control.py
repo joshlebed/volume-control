@@ -23,6 +23,7 @@ from lirc.exceptions import (
 
 class RemoteID(StrEnum):
     ONKYO = "onkyo"
+    ROKU = "roku"
     DISCO_LIGHT = "ADJ-REMOTE"
 
 
@@ -48,6 +49,21 @@ class OnkyoButton(StrEnum):
     BTN_LEVEL_PLUS = "BTN_LEVEL_PLUS"
     KEY_SETUP = "KEY_SETUP"
     KEY_TV_POWER = "KEY_TV_POWER"
+
+
+class RokuButton(StrEnum):
+    KEY_BACK = "KEY_BACK"
+    KEY_HOME = "KEY_HOME"
+    KEY_UP = "KEY_UP"
+    KEY_LEFT = "KEY_LEFT"
+    KEY_OK = "KEY_OK"
+    KEY_RIGHT = "KEY_RIGHT"
+    KEY_DOWN = "KEY_DOWN"
+    KEY_AGAIN = "KEY_AGAIN"
+    KEY_INFO = "KEY_INFO"
+    KEY_REWIND = "KEY_REWIND"
+    KEY_PLAYPAUSE = "KEY_PLAYPAUSE"
+    KEY_FASTFORWARD = "KEY_FASTFORWARD"
 
 
 class HoldTime(Enum):
@@ -110,6 +126,7 @@ MACROPAD_TOGGLE_DJ_TV_MODE_TRIGGER = F3_CODE
 MACROPAD_TOGGLE_KITCHEN_SPEAKERS_TRIGGER = F6_CODE
 MACROPAD_TOGGLE_SURROUND_MODE_TRIGGER = F2_CODE
 MACROPAD_TOGGLE_DISCO_LIGHT_RED_YELLOW_TRIGGER = F5_CODE
+
 # numpad triggers
 NUMPAD_VOLUME_DOWN_TRIGGER = NUM_1_CODE
 NUMPAD_VOLUME_UP_TRIGGER = NUM_2_CODE
@@ -119,6 +136,7 @@ NUMPAD_DISCO_LIGHT_WHITE_TRIGGER = BACKSPACE_CODE
 NUMPAD_DISCO_LIGHT_YELLOW_TRIGGER = MINUS_CODE
 NUMPAD_DISCO_LIGHT_RED_TRIGGER = PLUS_CODE
 NUMPAD_DISCO_LIGHT_TOGGLE_TRIGGER = ENTER_CODE
+NUMPAD_SPOTIFY_DARK_MODE_TRIGGER = TAB_CODE
 
 CompoundException = (
     LircError,
@@ -175,6 +193,9 @@ class Remote:
     def send_to_onkyo_then_sleep(self, msg, times=1):
         self.send_to_remote_then_sleep(RemoteID.ONKYO, msg, times)
 
+    def send_to_roku_then_sleep(self, msg, times=1):
+        self.send_to_remote_then_sleep(RemoteID.ROKU, msg, times)
+
     def send_to_disco_light_then_sleep(self, msg, times=1):
         self.send_to_remote_then_sleep(RemoteID.DISCO_LIGHT, msg, times)
 
@@ -222,10 +243,12 @@ class Remote:
         self.receiver_input_source = ReceiverInputSource.DJ
 
         self.press_and_hold_to_onkyo(
-            OnkyoButton.KEY_VOLUMEDOWN, HoldTime.VOLUME_ALL_THE_WAY
+            OnkyoButton.KEY_VOLUMEDOWN, HoldTime.VOLUME_ALL_THE_WAY.value
         )
         self.send_to_onkyo_then_sleep(OnkyoButton.KEY_TV_POWER)
-        self.press_and_hold_to_onkyo(OnkyoButton.KEY_VOLUMEUP, HoldTime.VOLUME_0_TO_60)
+        self.press_and_hold_to_onkyo(
+            OnkyoButton.KEY_VOLUMEUP, HoldTime.VOLUME_0_TO_60.value
+        )
 
         logger.info("done switching to dj mode")
 
@@ -235,10 +258,12 @@ class Remote:
         self.receiver_input_source = ReceiverInputSource.TV
 
         self.press_and_hold_to_onkyo(
-            OnkyoButton.KEY_VOLUMEDOWN, HoldTime.VOLUME_ALL_THE_WAY
+            OnkyoButton.KEY_VOLUMEDOWN, HoldTime.VOLUME_ALL_THE_WAY.value
         )
         self.send_to_onkyo_then_sleep(OnkyoButton.KEY_TV_POWER)
-        self.press_and_hold_to_onkyo(OnkyoButton.KEY_VOLUMEUP, HoldTime.VOLUME_0_TO_30)
+        self.press_and_hold_to_onkyo(
+            OnkyoButton.KEY_VOLUMEUP, HoldTime.VOLUME_0_TO_30.value
+        )
 
         logger.info("done switching to tv mode")
 
@@ -258,11 +283,11 @@ class Remote:
         try:
             self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 5)
             self.press_and_hold_to_onkyo(
-                OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS
+                OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
             )
             self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 1)
             self.press_and_hold_to_onkyo(
-                OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS
+                OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
             )
         except CompoundException:
             logger.error(traceback.format_exc())
@@ -272,12 +297,12 @@ class Remote:
         logger.info("turning kitchen speakers on")
         self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 5)
         self.press_and_hold_to_onkyo(
-            OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS
+            OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS.value
         )
         self.send_to_onkyo_then_sleep(OnkyoButton.BTN_LEVEL_MINUS, 4)
         self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 1)
         self.press_and_hold_to_onkyo(
-            OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS
+            OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS.value
         )
         self.send_to_onkyo_then_sleep(OnkyoButton.BTN_LEVEL_MINUS, 4)
         logger.info("done turning kitchen speakers on")
@@ -370,6 +395,10 @@ class Remote:
         logger.info("toggling disco spotlight power on/off")
         self.send_to_disco_light_then_sleep("STAND_BY")
 
+    def turn_on_spotify_dark_mode(self):
+        logger.info("turning on spotify dark mode")
+        self.send_to_roku_then_sleep(RokuButton.KEY_UP)
+
 
 def custom_exception_handler(loop, context):
     # first, handle with default handler
@@ -402,6 +431,8 @@ async def handle_events(device: evdev.InputDevice, remote: Remote):
 
             # TODO: handle these async on new threads so we can keep handling keyboard input
             # this will fix the queueing problem and allow for a kill switch
+            # TODO: came back here 8 months later to add the same comment
+            # maybe 8 months from now I'll actually fix it
 
             # push key event
             if event.value == 1:
@@ -435,6 +466,8 @@ async def handle_events(device: evdev.InputDevice, remote: Remote):
                     remote.turn_disco_light_red()
                 if event.code == NUMPAD_DISCO_LIGHT_TOGGLE_TRIGGER:
                     remote.toggle_disco_light_power()
+                if event.code == NUMPAD_SPOTIFY_DARK_MODE_TRIGGER:
+                    remote.turn_on_spotify_dark_mode()
 
             # release key event
             if event.value == 0:
@@ -491,8 +524,7 @@ def main():
                 logger.exception(e_group)
                 break
 
-            # not sure why linter complains about this line
-            e = e_group.exceptions[0]
+            e = e_group.exceptions[0]  # pylint: disable=unsubscriptable-object
 
             if isinstance(e, FileNotFoundError):
                 logger.info(

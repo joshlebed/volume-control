@@ -1,1 +1,2 @@
-@reboot ps aux | grep volume_controller_evdev_lirc | grep -v grep | awk '{print $2}' | xargs kill; nohup python3.11 ~/code/volume-control/scripts/volume_controller_evdev_lirc.py &> /tmp/nohup.out & disown
+# this is currently not utilized
+@reboot ps aux | grep volume_control | grep -v grep | awk '{print $2}' | xargs kill; nohup python3.11 ~/code/volume-control/scripts/volume_control.py &> /tmp/nohup.out & disown
