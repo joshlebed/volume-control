@@ -421,7 +421,6 @@ def custom_exception_handler(loop, context):
 
 
 async def handle_events(device: evdev.InputDevice, remote: Remote):
-    logger.info("evdev.ecodes.EV_KEY")
     async for event in device.async_read_loop():
         if event.type == evdev.ecodes.ecodes["EV_KEY"]:
             # logger.info("GOT EVENT:")
