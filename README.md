@@ -23,41 +23,41 @@ python service to send IR commands to AV receiver and other IR devices based on 
 
 #### wireless numpad
 
-```
-ESC| X |TAB| =
----┼---┼---┼---
-NUM| / | * |<-
----┼---┼---┼---
- 7 | 8 | 9 | -
----┼---┼---┼---
- 4 | 5 | 6 | +
----┼---┼---┼---
- 1 | 2 | 3 |
----┴---┼---┤RET
-   0   | . |
+````
+ESC| X |TAB| =     ESC| X |TAB| =
+---┼---┼---┼---    ---┼---┼---┼---
+NUM| / | * |<-     NUM| / | * |<-
+---┼---┼---┼---    ---┼---┼---┼---
+ 7 | 8 | 9 | -      7 | 8 | 9 | -
+---┼---┼---┼---    ---┼---┼---┼---
+ 4 | 5 | 6 | +      4 | 5 | 6 | +
+---┼---┼---┼---    ---┼---┼---┼---
+ 1 | 2 | 3 |        1 | 2 | 3 |
+---┴---┼---┤RET    ---┴---┼---┤RET
+   0   | . |          0   | . |
 
 [not implemented yet]
 
 ESC - cancel current command (TODO)
 X - can't remap this button
-TAB - spotify dark mode (TODO)
-= - turn TV off (TODO)
+TAB - spotify dark mode
+= - turn TV off
 NUM -
 / -
 * -
 <- - disco light white
-7 -
-8 -
+7 - kitchen speakers on
+8 - kitchen speakers off
 9 -
 - - disco light yellow
-4 - DJ mode
-5 - TV mode
+4 - TV mode
+5 - DJ mode
 6 -
 + - disco light red
 1 - volume down
 2 - volume up
 3 -
-0 -
+0 - toggle stereo/direct
 . -
 RET - disco light on/off
 ```
@@ -220,3 +220,8 @@ other option: ssh in from HASSIO and execute python script
 - pros and cons?
 
 figure out how to apply `automated-commands.cron`, and add instructions to README
+````
+
+use this:
+https://github.com/jasonacox/tinytuya
+to control disco ball (and other local tuya devices) from keypad

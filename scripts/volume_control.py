@@ -30,7 +30,9 @@ class RemoteID(StrEnum):
 class OnkyoButton(StrEnum):
     KEY_POWER = "KEY_POWER"
     BTN_1 = "BTN_1"
+    GOTO_TV_INPUT = "BTN_1"
     BTN_2 = "BTN_2"
+    GOTO_DJ_INPUT = "BTN_2"
     BTN_3 = "BTN_3"
     BTN_4 = "BTN_4"
     BTN_5 = "BTN_5"
@@ -52,18 +54,28 @@ class OnkyoButton(StrEnum):
 
 
 class RokuButton(StrEnum):
-    KEY_BACK = "KEY_BACK"
-    KEY_HOME = "KEY_HOME"
-    KEY_UP = "KEY_UP"
-    KEY_LEFT = "KEY_LEFT"
-    KEY_OK = "KEY_OK"
-    KEY_RIGHT = "KEY_RIGHT"
-    KEY_DOWN = "KEY_DOWN"
-    KEY_AGAIN = "KEY_AGAIN"
-    KEY_INFO = "KEY_INFO"
-    KEY_REWIND = "KEY_REWIND"
-    KEY_PLAYPAUSE = "KEY_PLAYPAUSE"
-    KEY_FASTFORWARD = "KEY_FASTFORWARD"
+    POWER = "POWER"
+    HOME = "HOME"
+    BACK = "BACK"
+    UP = "UP"
+    PLAY_PAUSE = "PLAY_PAUSE"
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
+    DOWN = "DOWN"
+    OK = "OK"
+    BACK_A_LITTLE_BIT = "BACK_A_LITTLE_BIT"
+    STAR = "STAR"
+    REWIND = "REWIND"
+    FAST_FORWARD = "FAST_FORWARD"
+    BUTTON_1 = "BUTTON_1"
+    BUTTON_2 = "BUTTON_2"
+    NETFLIX = "NETFLIX"
+    DISNEY_PLUS = "DISNEY_PLUS"
+    APPLE_TV = "APPLE_TV"
+    PARAMOUNT_PLUS = "PARAMOUNT_PLUS"
+    VOLUME_UP = "VOLUME_UP"
+    VOLUME_DOWN = "VOLUME_DOWN"
+    MUTE = "MUTE"
 
 
 class HoldTime(Enum):
@@ -130,13 +142,17 @@ MACROPAD_TOGGLE_DISCO_LIGHT_RED_YELLOW_TRIGGER = F5_CODE
 # numpad triggers
 NUMPAD_VOLUME_DOWN_TRIGGER = NUM_1_CODE
 NUMPAD_VOLUME_UP_TRIGGER = NUM_2_CODE
-NUMPAD_DJ_MODE_TRIGGER = NUM_4_CODE
-NUMPAD_TV_MODE_TRIGGER = NUM_5_CODE
+NUMPAD_TV_MODE_TRIGGER = NUM_4_CODE
+NUMPAD_DJ_MODE_TRIGGER = NUM_5_CODE
+NUMPAD_KITCHEN_SPEAKERS_ON_TRIGGER = NUM_7_CODE
+NUMPAD_KITCHEN_SPEAKERS_OFF_TRIGGER = NUM_8_CODE
 NUMPAD_DISCO_LIGHT_WHITE_TRIGGER = BACKSPACE_CODE
 NUMPAD_DISCO_LIGHT_YELLOW_TRIGGER = MINUS_CODE
 NUMPAD_DISCO_LIGHT_RED_TRIGGER = PLUS_CODE
 NUMPAD_DISCO_LIGHT_TOGGLE_TRIGGER = ENTER_CODE
 NUMPAD_SPOTIFY_DARK_MODE_TRIGGER = TAB_CODE
+NUMPAD_TV_POWER_TRIGGER = EQUALS_CODE
+NUMPAD_TOGGLE_SURROUND_MODE_TRIGGER = NUM_0_CODE
 
 CompoundException = (
     LircError,
@@ -237,34 +253,46 @@ class Remote:
         self.busy = False
 
     # RECEIVER INPUT
-    def switch_to_dj_mode(self):
-        logger.info("switching to dj mode")
+    def switch_to_dj_mode_and_reset_volume_accordingly_LEGACY(self):
+        logger.info("switching to dj mode (LEGACY)")
 
         self.receiver_input_source = ReceiverInputSource.DJ
 
         self.press_and_hold_to_onkyo(
             OnkyoButton.KEY_VOLUMEDOWN, HoldTime.VOLUME_ALL_THE_WAY.value
         )
-        self.send_to_onkyo_then_sleep(OnkyoButton.KEY_TV_POWER)
+        self.send_to_onkyo_then_sleep(OnkyoButton.GOTO_DJ_INPUT)
         self.press_and_hold_to_onkyo(
             OnkyoButton.KEY_VOLUMEUP, HoldTime.VOLUME_0_TO_60.value
         )
 
-        logger.info("done switching to dj mode")
+        logger.info("done switching to dj mode (LEGACY)")
 
-    def switch_to_tv_mode(self):
-        logger.info("switching to tv mode")
+    def switch_to_tv_mode_and_reset_volume_accordingly_LEGACY(self):
+        logger.info("switching to tv mode (LEGACY)")
 
         self.receiver_input_source = ReceiverInputSource.TV
 
         self.press_and_hold_to_onkyo(
             OnkyoButton.KEY_VOLUMEDOWN, HoldTime.VOLUME_ALL_THE_WAY.value
         )
-        self.send_to_onkyo_then_sleep(OnkyoButton.KEY_TV_POWER)
+        self.send_to_onkyo_then_sleep(OnkyoButton.GOTO_TV_INPUT)
         self.press_and_hold_to_onkyo(
             OnkyoButton.KEY_VOLUMEUP, HoldTime.VOLUME_0_TO_30.value
         )
 
+        logger.info("done switching to tv mode (LEGACY)")
+
+    def switch_to_dj_mode(self):
+        logger.info("switching to dj mode")
+        self.receiver_input_source = ReceiverInputSource.DJ
+        self.send_to_onkyo_then_sleep(OnkyoButton.GOTO_DJ_INPUT)
+        logger.info("done switching to dj mode")
+
+    def switch_to_tv_mode(self):
+        logger.info("switching to tv mode")
+        self.receiver_input_source = ReceiverInputSource.TV
+        self.send_to_onkyo_then_sleep(OnkyoButton.GOTO_TV_INPUT)
         logger.info("done switching to tv mode")
 
     def toggle_input_tv_to_dj(self):
@@ -280,21 +308,25 @@ class Remote:
     # KITCHEN SPEAKERS
     def turn_kitchen_speakers_off(self):
         logger.info("turning kitchen speakers off")
-        try:
-            self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 5)
-            self.press_and_hold_to_onkyo(
-                OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
-            )
-            self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 1)
-            self.press_and_hold_to_onkyo(
-                OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
-            )
-        except CompoundException:
-            logger.error(traceback.format_exc())
+        self.kitchen_speakers_on = False
+
+        self.clear_menu_state()
+        self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 5)
+        self.press_and_hold_to_onkyo(
+            OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
+        )
+        self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 1)
+        self.press_and_hold_to_onkyo(
+            OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
+        )
+
         logger.info("done turning kitchen speakers off")
 
     def turn_kitchen_speakers_on(self):
         logger.info("turning kitchen speakers on")
+        self.kitchen_speakers_on = True
+
+        self.clear_menu_state()
         self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 5)
         self.press_and_hold_to_onkyo(
             OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS.value
@@ -305,6 +337,7 @@ class Remote:
             OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS.value
         )
         self.send_to_onkyo_then_sleep(OnkyoButton.BTN_LEVEL_MINUS, 4)
+
         logger.info("done turning kitchen speakers on")
 
     def clear_menu_state(self):
@@ -313,16 +346,10 @@ class Remote:
 
     def toggle_kitchen_speakers(self):
         logger.info("toggling kitchen speakers on/off")
-
-        self.clear_menu_state()
-
         if not self.kitchen_speakers_on:
             self.turn_kitchen_speakers_on()
-            self.kitchen_speakers_on = True
-
         else:
             self.turn_kitchen_speakers_off()
-            self.kitchen_speakers_on = False
 
     # SURROUND SOUND MODE
     def switch_to_all_channel_stereo(self):
@@ -395,9 +422,15 @@ class Remote:
         logger.info("toggling disco spotlight power on/off")
         self.send_to_disco_light_then_sleep("STAND_BY")
 
-    def turn_on_spotify_dark_mode(self):
-        logger.info("turning on spotify dark mode")
-        self.send_to_roku_then_sleep(RokuButton.KEY_UP)
+    def toggle_spotify_dark_mode(self):
+        logger.info("toggling spotify dark mode")
+        self.send_to_roku_then_sleep(RokuButton.RIGHT, 6)
+        self.send_to_roku_then_sleep(RokuButton.OK)
+        self.send_to_roku_then_sleep(RokuButton.BACK)
+
+    def toggle_tv_power(self):
+        logger.info("toggling TV power")
+        self.send_to_roku_then_sleep(RokuButton.POWER)
 
 
 def custom_exception_handler(loop, context):
@@ -449,7 +482,14 @@ async def handle_events(device: evdev.InputDevice, remote: Remote):
                     remote.toggle_input_tv_to_dj()
                 if event.code == MACROPAD_TOGGLE_KITCHEN_SPEAKERS_TRIGGER:
                     remote.toggle_kitchen_speakers()
-                if event.code == MACROPAD_TOGGLE_SURROUND_MODE_TRIGGER:
+                if event.code == NUMPAD_KITCHEN_SPEAKERS_ON_TRIGGER:
+                    remote.turn_kitchen_speakers_on()
+                if event.code == NUMPAD_KITCHEN_SPEAKERS_OFF_TRIGGER:
+                    remote.turn_kitchen_speakers_off()
+                if (
+                    event.code == MACROPAD_TOGGLE_SURROUND_MODE_TRIGGER
+                    or event.code == NUMPAD_TOGGLE_SURROUND_MODE_TRIGGER
+                ):
                     remote.toggle_surround_mode()
                 if event.code == MACROPAD_TOGGLE_DISCO_LIGHT_RED_YELLOW_TRIGGER:
                     remote.toggle_disco_light_red_yellow()
@@ -466,7 +506,9 @@ async def handle_events(device: evdev.InputDevice, remote: Remote):
                 if event.code == NUMPAD_DISCO_LIGHT_TOGGLE_TRIGGER:
                     remote.toggle_disco_light_power()
                 if event.code == NUMPAD_SPOTIFY_DARK_MODE_TRIGGER:
-                    remote.turn_on_spotify_dark_mode()
+                    remote.toggle_spotify_dark_mode()
+                if event.code == NUMPAD_TV_POWER_TRIGGER:
+                    remote.toggle_tv_power()
 
             # release key event
             if event.value == 0:
@@ -492,8 +534,8 @@ async def listen_to_keyboard_events(remote):
             "/dev/input/by-id/usb-1189_8890-event-kbd",
             "/dev/input/by-id/usb-1189_8890-if03-event-mouse",
             "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-kbd",  # good
-            "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-if01-event-mouse",  # good (probably unnecessary)
-            "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-if01",  # good (probably unnecessary)
+            # "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-if01-event-mouse",  # good (probably unnecessary)
+            # "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-if01",  # good (probably unnecessary)
             # "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-if01-mouse", # breaks
         ]:
             tg.create_task(handle_events(evdev.InputDevice(path_to_device), remote))
@@ -508,6 +550,7 @@ async def listen_to_keyboard_events(remote):
 
 
 def main():
+    logger.info("--------------------------------------------")
     logger.info("starting up volume control server")
     lirc_client = lirc.Client()
     remote = Remote(lirc_client)
