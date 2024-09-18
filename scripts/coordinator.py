@@ -1,3 +1,5 @@
+import asyncio
+
 from remote import Remote
 
 # keyboard input codes
@@ -83,51 +85,55 @@ class Coordinator:
             ):
                 self.remote.start_holding_volume_down()
 
-            if (
+            elif (
                 event.code == MACROPAD_VOLUME_UP_TRIGGER
                 or event.code == NUMPAD_VOLUME_UP_TRIGGER
             ):
                 self.remote.start_holding_volume_up()
-            # if event.code == MACROPAD_TOGGLE_DJ_TV_MODE_TRIGGER:
+            # elif event.code == MACROPAD_TOGGLE_DJ_TV_MODE_TRIGGER:
             #     self.remote.toggle_input_tv_to_dj()
-            # if event.code == MACROPAD_TOGGLE_KITCHEN_SPEAKERS_TRIGGER:
+            # elif event.code == MACROPAD_TOGGLE_KITCHEN_SPEAKERS_TRIGGER:
             #     self.remote.toggle_kitchen_speakers()
-            if event.code == NUMPAD_KITCHEN_SPEAKERS_ON_TRIGGER:
-                self.remote.turn_kitchen_speakers_on_ASYNC()
-            if event.code == NUMPAD_KITCHEN_SPEAKERS_OFF_TRIGGER:
-                self.remote.turn_kitchen_speakers_off_ASYNC()
-            if (
+            elif event.code == NUMPAD_KITCHEN_SPEAKERS_ON_TRIGGER:
+                self.current_task = asyncio.create_task(
+                    self.remote.turn_kitchen_speakers_on_ASYNC()
+                )
+            elif event.code == NUMPAD_KITCHEN_SPEAKERS_OFF_TRIGGER:
+                self.current_task = asyncio.create_task(
+                    self.remote.turn_kitchen_speakers_off_ASYNC()
+                )
+            elif (
                 event.code == MACROPAD_TOGGLE_SURROUND_MODE_TRIGGER
                 or event.code == NUMPAD_TOGGLE_SURROUND_MODE_TRIGGER
             ):
                 self.remote.toggle_surround_mode()
-            if event.code == MACROPAD_TOGGLE_DISCO_LIGHT_RED_YELLOW_TRIGGER:
+            elif event.code == MACROPAD_TOGGLE_DISCO_LIGHT_RED_YELLOW_TRIGGER:
                 self.remote.toggle_disco_light_red_yellow()
-            if event.code == NUMPAD_DJ_MODE_TRIGGER:
+            elif event.code == NUMPAD_DJ_MODE_TRIGGER:
                 self.remote.switch_to_dj_mode()
-            if event.code == NUMPAD_TV_MODE_TRIGGER:
+            elif event.code == NUMPAD_TV_MODE_TRIGGER:
                 self.remote.switch_to_tv_mode()
-            if event.code == NUMPAD_DISCO_LIGHT_WHITE_TRIGGER:
+            elif event.code == NUMPAD_DISCO_LIGHT_WHITE_TRIGGER:
                 self.remote.turn_disco_light_white()
-            if event.code == NUMPAD_DISCO_LIGHT_YELLOW_TRIGGER:
+            elif event.code == NUMPAD_DISCO_LIGHT_YELLOW_TRIGGER:
                 self.remote.turn_disco_light_yellow()
-            if event.code == NUMPAD_DISCO_LIGHT_RED_TRIGGER:
+            elif event.code == NUMPAD_DISCO_LIGHT_RED_TRIGGER:
                 self.remote.turn_disco_light_red()
-            if event.code == NUMPAD_DISCO_LIGHT_TOGGLE_TRIGGER:
+            elif event.code == NUMPAD_DISCO_LIGHT_TOGGLE_TRIGGER:
                 self.remote.toggle_disco_light_power()
-            if event.code == NUMPAD_SPOTIFY_DARK_MODE_TRIGGER:
+            elif event.code == NUMPAD_SPOTIFY_DARK_MODE_TRIGGER:
                 self.remote.toggle_spotify_dark_mode()
-            if event.code == NUMPAD_TV_POWER_TRIGGER:
+            elif event.code == NUMPAD_TV_POWER_TRIGGER:
                 self.remote.toggle_tv_power()
 
         # release key event
-        if event.value == 0:
+        elif event.value == 0:
             if (
                 event.code == MACROPAD_VOLUME_DOWN_TRIGGER
                 or event.code == NUMPAD_VOLUME_DOWN_TRIGGER
             ):
                 self.remote.stop_holding_volume_button()
-            if (
+            elif (
                 event.code == MACROPAD_VOLUME_UP_TRIGGER
                 or event.code == NUMPAD_VOLUME_UP_TRIGGER
             ):
