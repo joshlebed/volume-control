@@ -133,6 +133,8 @@ class Coordinator:
                 or event.code == NUMPAD_VOLUME_DOWN_TRIGGER
             ):
                 self.remote.stop_holding_volume_button()
+                self.remote.stop_holding_volume_button()
+                self.remote.stop_holding_volume_button()
             elif (
                 event.code == MACROPAD_VOLUME_UP_TRIGGER
                 or event.code == NUMPAD_VOLUME_UP_TRIGGER
