@@ -64,6 +64,7 @@ class Coordinator:
         print("creating coordinator")
         self.remote = remote
         self.current_task = None
+        self.holding = False
 
     def start_task(self, promise):
         self.current_task = asyncio.create_task(promise)
@@ -82,38 +83,42 @@ class Coordinator:
         # maybe 8 months from now I'll actually fix it
 
         # push key event
-        if self.current_task and not self.current_task.done():
-            # if cancel task button is pressed, cancel the current task
-            if event.value == 1 and event.code == NUMPAD_CANCEL_TASK_TRIGGER:
-                self.current_task.cancel()
-                print("cancelled task")
-                print(self.current_task)
-                print(self.current_task.done())
-                print(self.current_task.cancelled())
-                print(self.current_task.exception())
-                print(self.current_task.result())
-                print(self.current_task.get_coro())
-                print(self.current_task.get_stack())
-                print(self.current_task.get_name())
-                print(self.current_task.get_origin())
-                print(self.current_task.get_context())
-
-            # if any other key is pressed, do nothing
-            return
 
         # if no task is running, then accept input
         if event.value == 1:
+            # if a task is running, then don't accept a new task
+            if self.current_task and not self.current_task.done():
+                # if cancel task button is pressed, cancel the current task
+                if event.code == NUMPAD_CANCEL_TASK_TRIGGER:
+                    self.current_task.cancel()
+                    print("cancelled task")
+                    print(self.current_task)
+                    print(self.current_task.done())
+                    print(self.current_task.cancelled())
+                    print(self.current_task.exception())
+                    print(self.current_task.result())
+                    print(self.current_task.get_coro())
+                    print(self.current_task.get_stack())
+                    print(self.current_task.get_name())
+
+                # if any other key is pressed, do nothing
+                return
+
             if (
                 event.code == MACROPAD_VOLUME_DOWN_TRIGGER
                 or event.code == NUMPAD_VOLUME_DOWN_TRIGGER
             ):
-                self.start_task(self.remote.start_holding_volume_down_ASYNC())
+                if not self.holding:
+                    self.holding = True
+                    self.remote.start_holding_volume_down_ASYNC()
 
             elif (
                 event.code == MACROPAD_VOLUME_UP_TRIGGER
                 or event.code == NUMPAD_VOLUME_UP_TRIGGER
             ):
-                self.start_task(self.remote.start_holding_volume_up_ASYNC())
+                if not self.holding:
+                    self.holding = True
+                    self.remote.start_holding_volume_up_ASYNC()
             # elif event.code == MACROPAD_TOGGLE_DJ_TV_MODE_TRIGGER:
             #     self.remote.toggle_input_tv_to_dj()
             # elif event.code == MACROPAD_TOGGLE_KITCHEN_SPEAKERS_TRIGGER:
@@ -153,9 +158,13 @@ class Coordinator:
                 event.code == MACROPAD_VOLUME_DOWN_TRIGGER
                 or event.code == NUMPAD_VOLUME_DOWN_TRIGGER
             ):
-                self.start_task(self.remote.stop_holding_volume_button())
+                if self.holding:
+                    self.start_task(self.remote.stop_holding_volume_button())
+                    self.holding = False
             elif (
                 event.code == MACROPAD_VOLUME_UP_TRIGGER
                 or event.code == NUMPAD_VOLUME_UP_TRIGGER
             ):
-                self.start_task(self.remote.stop_holding_volume_button())
+                if self.holding:
+                    self.start_task(self.remote.stop_holding_volume_button())
+                    self.holding = False
