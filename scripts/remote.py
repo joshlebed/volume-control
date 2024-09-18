@@ -155,37 +155,13 @@ class Remote:
         await asyncio.sleep(0.2)
 
     # VOLUME CONTROLS
-    def start_holding_volume_down(self):
-        logger.info("volume down")
-        if self.busy:
-            return
-        self.busy = True
-
-        self.client.send_start(RemoteID.ONKYO, OnkyoButton.KEY_VOLUMEDOWN)
-
     def start_holding_volume_down_ASYNC(self):
         logger.info("volume down")
         self.client.send_start(RemoteID.ONKYO, OnkyoButton.KEY_VOLUMEDOWN)
 
-    def start_holding_volume_up(self):
-        logger.info("volume up")
-        if self.busy:
-            return
-        self.busy = True
-
-        self.client.send_start(RemoteID.ONKYO, OnkyoButton.KEY_VOLUMEUP)
-
     def start_holding_volume_up_ASYNC(self):
         logger.info("volume up")
         self.client.send_start(RemoteID.ONKYO, OnkyoButton.KEY_VOLUMEUP)
-
-    def stop_holding_volume_button(self):
-        logger.info("done with volume buttons")
-        if not self.busy:
-            return
-
-        self.client.send_stop()
-        self.busy = False
 
     def stop_holding_volume_button_ASYNC(self):
         logger.info("done with volume buttons")
