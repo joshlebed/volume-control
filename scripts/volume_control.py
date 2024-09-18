@@ -105,6 +105,7 @@ def main():
                 )
                 time.sleep(RETRY_TIME_SECONDS)
             else:
+                print(e)
                 logger.info("caught some other type of error. quitting")
                 logger.exception(e)
                 break
