@@ -225,3 +225,7 @@ figure out how to apply `automated-commands.cron`, and add instructions to READM
 use this:
 https://github.com/jasonacox/tinytuya
 to control disco ball (and other local tuya devices) from keypad
+
+set this up:
+https://community.home-assistant.io/t/remote-access-with-docker/314345?page=2
+to control home assistant from keypad
