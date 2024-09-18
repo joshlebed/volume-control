@@ -214,15 +214,20 @@ class Remote:
     async def turn_kitchen_speakers_off_ASYNC(self):
         logger.info("turning kitchen speakers off")
 
-        await self.clear_menu_state_ASYNC()
-        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 5)
-        await self.press_and_hold_to_onkyo_ASYNC(
-            OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
-        )
-        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 1)
-        await self.press_and_hold_to_onkyo_ASYNC(
-            OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
-        )
+        try:
+            await self.clear_menu_state_ASYNC()
+            await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 5)
+            await self.press_and_hold_to_onkyo_ASYNC(
+                OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
+            )
+            await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 1)
+            await self.press_and_hold_to_onkyo_ASYNC(
+                OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
+            )
+            await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_LEVEL_MINUS, 4)
+
+        except asyncio.CancelledError:
+            logger.info("turn_kitchen_speakers_off_ASYNC was cancelled")
 
         logger.info("done turning kitchen speakers off")
 
@@ -246,17 +251,21 @@ class Remote:
     async def turn_kitchen_speakers_on_ASYNC(self):
         logger.info("turning kitchen speakers on")
 
-        await self.clear_menu_state_ASYNC()
-        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 5)
-        await self.press_and_hold_to_onkyo_ASYNC(
-            OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS.value
-        )
-        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_LEVEL_MINUS, 4)
-        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 1)
-        await self.press_and_hold_to_onkyo_ASYNC(
-            OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS.value
-        )
-        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_LEVEL_MINUS, 4)
+        try:
+            await self.clear_menu_state_ASYNC()
+            await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 5)
+            await self.press_and_hold_to_onkyo_ASYNC(
+                OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS.value
+            )
+            await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_LEVEL_MINUS, 4)
+            await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 1)
+            await self.press_and_hold_to_onkyo_ASYNC(
+                OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS.value
+            )
+            await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_LEVEL_MINUS, 4)
+
+        except asyncio.CancelledError:
+            logger.info("turn_kitchen_speakers_on_ASYNC was cancelled")
 
         logger.info("done turning kitchen speakers on")
 
