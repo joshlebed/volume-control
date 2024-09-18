@@ -120,7 +120,6 @@ class Remote:
                 await asyncio.sleep(0.2)
         except asyncio.CancelledError:
             logger.info("send_to_remote_then_sleep_ASYNC was cancelled")
-            raise
 
     def send_to_onkyo_then_sleep(self, msg, times=1):
         self.send_to_remote_then_sleep(RemoteID.ONKYO, msg, times)
@@ -161,7 +160,6 @@ class Remote:
         except asyncio.CancelledError:
             self.client.send_stop(RemoteID.ONKYO, msg)
             logger.info("press_and_hold_to_onkyo_ASYNC was cancelled")
-            raise
 
     # VOLUME CONTROLS
     def start_holding_volume_down_ASYNC(self):
