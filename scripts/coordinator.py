@@ -61,7 +61,6 @@ NUMPAD_CANCEL_TASK_TRIGGER = ESCAPE_CODE
 
 class Coordinator:
     def __init__(self, remote: Remote):
-        print("creating coordinator")
         self.remote = remote
         self.current_task = None
         self.holding = False
@@ -70,8 +69,6 @@ class Coordinator:
         self.current_task = asyncio.create_task(promise)
 
     def handle_keyboard_event(self, event):
-        print("handling keyboard event")
-
         # logger.info("GOT EVENT:")
         # logger.info(evdev.categorize(event))
         # logger.info(event.value)

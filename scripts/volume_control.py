@@ -21,7 +21,7 @@ def custom_exception_handler(loop, context):
     logger.exception(exception)
 
     if isinstance(exception, OSError):
-        print(context)
+        logger.info(context)
         logger.info(
             "the above printed error is an OSError,"
             + " which is probably the keyboard being disconnected"
@@ -32,7 +32,6 @@ def custom_exception_handler(loop, context):
 
 
 async def handle_events(device: evdev.InputDevice, coordinator: Coordinator):
-    print("in handle_events")
     async for event in device.async_read_loop():
         if event.type == evdev.ecodes.ecodes["EV_KEY"]:
             coordinator.handle_keyboard_event(event)
@@ -105,7 +104,7 @@ def main():
                 )
                 time.sleep(RETRY_TIME_SECONDS)
             else:
-                print(e)
+                logger.info(e)
                 logger.info("caught some other type of error. quitting")
                 logger.exception(e)
                 break
