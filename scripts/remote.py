@@ -12,8 +12,7 @@ from lirc.exceptions import (
     LircError,
     UnsupportedOperatingSystemError,
 )
-
-from scripts.logger import logger
+from logger import logger
 
 
 class RemoteID(StrEnum):

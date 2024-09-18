@@ -1,7 +1,6 @@
 import asyncio
 import time
 
-
 import evdev
 import lirc
 from lirc.exceptions import (
@@ -12,9 +11,8 @@ from lirc.exceptions import (
     LircError,
     UnsupportedOperatingSystemError,
 )
-
-from scripts.logger import logger
-from scripts.remote import Remote
+from logger import logger
+from remote import Remote
 
 # other constants
 RETRY_TIME_SECONDS = 5
