@@ -85,19 +85,9 @@ class Remote:
         self.client = client
         self.busy = False
         self.dj_mode = False
-        self.kitchen_speakers_on = True
         self.direct_mode = True
         self.disco_light_color = DiscoLightColor.RED
         self.is_disco_light_on = False
-        self.receiver_input_source = ReceiverInputSource.TV
-
-    # new below this line --------------
-
-    async def send_to_remote_then_sleep_async(self, remote_id, msg):
-        self.send_to_remote(remote_id, msg)
-        await asyncio.sleep(5.0)
-
-    # old below this line --------------
 
     # UTILS
     def send_to_remote(self, remote_id, msg):
@@ -112,19 +102,39 @@ class Remote:
 
         self.busy = False
 
+    def send_to_remote_ASYNC(self, remote_id, msg):
+        try:
+            self.client.send_once(remote_id, msg)
+        except CompoundException:
+            logger.error(traceback.format_exc())
+
     def send_to_remote_then_sleep(self, remote_id, msg, times):
         for _ in range(times):
             self.send_to_remote(remote_id, msg)
             time.sleep(0.2)
 
+    async def send_to_remote_then_sleep_ASYNC(self, remote_id, msg, times):
+        for _ in range(times):
+            self.send_to_remote_ASYNC(remote_id, msg)
+            await asyncio.sleep(0.2)
+
     def send_to_onkyo_then_sleep(self, msg, times=1):
         self.send_to_remote_then_sleep(RemoteID.ONKYO, msg, times)
+
+    async def send_to_onkyo_then_sleep_ASYNC(self, msg, times=1):
+        await self.send_to_remote_then_sleep_ASYNC(RemoteID.ONKYO, msg, times)
 
     def send_to_roku_then_sleep(self, msg, times=1):
         self.send_to_remote_then_sleep(RemoteID.ROKU, msg, times)
 
+    async def send_to_roku_then_sleep_ASYNC(self, msg, times=1):
+        await self.send_to_remote_then_sleep_ASYNC(RemoteID.ROKU, msg, times)
+
     def send_to_disco_light_then_sleep(self, msg, times=1):
         self.send_to_remote_then_sleep(RemoteID.DISCO_LIGHT, msg, times)
+
+    async def send_to_disco_light_then_sleep_ASYNC(self, msg, times=1):
+        await self.send_to_remote_then_sleep_ASYNC(RemoteID.DISCO_LIGHT, msg, times)
 
     def press_and_hold_to_onkyo(self, msg, seconds=0):
         if self.busy:
@@ -138,6 +148,12 @@ class Remote:
 
         self.busy = False
 
+    async def press_and_hold_to_onkyo_ASYNC(self, msg, seconds=0):
+        self.client.send_start(RemoteID.ONKYO, msg)
+        await asyncio.sleep(seconds)
+        self.client.send_stop(RemoteID.ONKYO, msg)
+        await asyncio.sleep(0.2)
+
     # VOLUME CONTROLS
     def start_holding_volume_down(self):
         logger.info("volume down")
@@ -145,6 +161,10 @@ class Remote:
             return
         self.busy = True
 
+        self.client.send_start(RemoteID.ONKYO, OnkyoButton.KEY_VOLUMEDOWN)
+
+    def start_holding_volume_down_ASYNC(self):
+        logger.info("volume down")
         self.client.send_start(RemoteID.ONKYO, OnkyoButton.KEY_VOLUMEDOWN)
 
     def start_holding_volume_up(self):
@@ -155,6 +175,10 @@ class Remote:
 
         self.client.send_start(RemoteID.ONKYO, OnkyoButton.KEY_VOLUMEUP)
 
+    def start_holding_volume_up_ASYNC(self):
+        logger.info("volume up")
+        self.client.send_start(RemoteID.ONKYO, OnkyoButton.KEY_VOLUMEUP)
+
     def stop_holding_volume_button(self):
         logger.info("done with volume buttons")
         if not self.busy:
@@ -163,33 +187,34 @@ class Remote:
         self.client.send_stop()
         self.busy = False
 
+    def stop_holding_volume_button_ASYNC(self):
+        logger.info("done with volume buttons")
+        self.client.send_stop()
+
     # RECEIVER INPUT
     def switch_to_dj_mode(self):
         logger.info("switching to dj mode")
-        self.receiver_input_source = ReceiverInputSource.DJ
         self.send_to_onkyo_then_sleep(OnkyoButton.GOTO_DJ_INPUT)
+        logger.info("done switching to dj mode")
+
+    async def switch_to_dj_mode_ASYNC(self):
+        logger.info("switching to dj mode")
+        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.GOTO_DJ_INPUT)
         logger.info("done switching to dj mode")
 
     def switch_to_tv_mode(self):
         logger.info("switching to tv mode")
-        self.receiver_input_source = ReceiverInputSource.TV
         self.send_to_onkyo_then_sleep(OnkyoButton.GOTO_TV_INPUT)
         logger.info("done switching to tv mode")
 
-    def toggle_input_tv_to_dj(self):
-        logger.info("toggling input between tv/dj")
-        self.clear_menu_state()
-
-        if self.receiver_input_source == ReceiverInputSource.TV:
-            self.switch_to_dj_mode()
-
-        else:
-            self.switch_to_tv_mode()
+    async def switch_to_tv_mode_ASYNC(self):
+        logger.info("switching to tv mode")
+        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.GOTO_TV_INPUT)
+        logger.info("done switching to tv mode")
 
     # KITCHEN SPEAKERS
     def turn_kitchen_speakers_off(self):
         logger.info("turning kitchen speakers off")
-        self.kitchen_speakers_on = False
 
         self.clear_menu_state()
         self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 5)
@@ -203,9 +228,23 @@ class Remote:
 
         logger.info("done turning kitchen speakers off")
 
+    async def turn_kitchen_speakers_off_ASYNC(self):
+        logger.info("turning kitchen speakers off")
+
+        await self.clear_menu_state_ASYNC()
+        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 5)
+        await self.press_and_hold_to_onkyo_ASYNC(
+            OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
+        )
+        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 1)
+        await self.press_and_hold_to_onkyo_ASYNC(
+            OnkyoButton.BTN_LEVEL_MINUS, HoldTime.KITCHEN_SPEAKERS.value
+        )
+
+        logger.info("done turning kitchen speakers off")
+
     def turn_kitchen_speakers_on(self):
         logger.info("turning kitchen speakers on")
-        self.kitchen_speakers_on = True
 
         self.clear_menu_state()
         self.send_to_onkyo_then_sleep(OnkyoButton.BTN_CH_SEL, 5)
@@ -221,16 +260,32 @@ class Remote:
 
         logger.info("done turning kitchen speakers on")
 
+    async def turn_kitchen_speakers_on_ASYNC(self):
+        logger.info("turning kitchen speakers on")
+
+        await self.clear_menu_state_ASYNC()
+        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 5)
+        await self.press_and_hold_to_onkyo_ASYNC(
+            OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS.value
+        )
+        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_LEVEL_MINUS, 4)
+        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_CH_SEL, 1)
+        await self.press_and_hold_to_onkyo_ASYNC(
+            OnkyoButton.BTN_LEVEL_PLUS, HoldTime.KITCHEN_SPEAKERS.value
+        )
+        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.BTN_LEVEL_MINUS, 4)
+
+        logger.info("done turning kitchen speakers on")
+
     def clear_menu_state(self):
         logger.info("clearing menu state")
         self.send_to_onkyo_then_sleep(OnkyoButton.KEY_SETUP, 2)
 
-    def toggle_kitchen_speakers(self):
-        logger.info("toggling kitchen speakers on/off")
-        if not self.kitchen_speakers_on:
-            self.turn_kitchen_speakers_on()
-        else:
-            self.turn_kitchen_speakers_off()
+    async def clear_menu_state_ASYNC(self):
+        logger.info("clearing menu state async")
+        await self.send_to_onkyo_then_sleep_ASYNC(OnkyoButton.KEY_SETUP, 2)
+
+    # TODO: finish the rest of the async methods
 
     # SURROUND SOUND MODE
     def switch_to_all_channel_stereo(self):

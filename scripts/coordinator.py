@@ -60,6 +60,7 @@ class Coordinator:
     def __init__(self, remote: Remote):
         print("creating coordinator")
         self.remote = remote
+        self.current_task = None
 
     def handle_keyboard_event(self, event):
         print("handling keyboard event")
@@ -87,14 +88,14 @@ class Coordinator:
                 or event.code == NUMPAD_VOLUME_UP_TRIGGER
             ):
                 self.remote.start_holding_volume_up()
-            if event.code == MACROPAD_TOGGLE_DJ_TV_MODE_TRIGGER:
-                self.remote.toggle_input_tv_to_dj()
-            if event.code == MACROPAD_TOGGLE_KITCHEN_SPEAKERS_TRIGGER:
-                self.remote.toggle_kitchen_speakers()
+            # if event.code == MACROPAD_TOGGLE_DJ_TV_MODE_TRIGGER:
+            #     self.remote.toggle_input_tv_to_dj()
+            # if event.code == MACROPAD_TOGGLE_KITCHEN_SPEAKERS_TRIGGER:
+            #     self.remote.toggle_kitchen_speakers()
             if event.code == NUMPAD_KITCHEN_SPEAKERS_ON_TRIGGER:
-                self.remote.turn_kitchen_speakers_on()
+                self.remote.turn_kitchen_speakers_on_ASYNC()
             if event.code == NUMPAD_KITCHEN_SPEAKERS_OFF_TRIGGER:
-                self.remote.turn_kitchen_speakers_off()
+                self.remote.turn_kitchen_speakers_off_ASYNC()
             if (
                 event.code == MACROPAD_TOGGLE_SURROUND_MODE_TRIGGER
                 or event.code == NUMPAD_TOGGLE_SURROUND_MODE_TRIGGER
