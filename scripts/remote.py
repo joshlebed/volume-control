@@ -229,6 +229,11 @@ class Remote:
         except asyncio.CancelledError:
             logger.info("turn_kitchen_speakers_off_ASYNC was cancelled")
 
+        except Exception as e:
+            logger.info("UH OH")
+            logger.error(e)
+            logger.error(traceback.format_exc())
+
         logger.info("done turning kitchen speakers off")
 
     def turn_kitchen_speakers_on(self):
