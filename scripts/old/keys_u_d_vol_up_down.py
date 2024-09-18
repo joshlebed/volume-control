@@ -1,15 +1,9 @@
 import logging
 import time
 import traceback
+
 import lirc
-from lirc.exceptions import (
-    LircError,
-    LircdSocketError,
-    LircdConnectionError,
-    LircdInvalidReplyPacketError,
-    LircdCommandFailureError,
-    UnsupportedOperatingSystemError
-)
+from logger import CompoundException
 
 client = lirc.Client()
 
@@ -20,15 +14,6 @@ HOLD_TIME = 3.5
 ONKYO_REMOTE_ID = "onkyo"
 DISCO_LIGHT_REMOTE_ID = "ADJ-REMOTE"
 
-CompoundException = (
-    LircError,
-    LircdSocketError,
-    LircdConnectionError,
-    LircdInvalidReplyPacketError,
-    LircdCommandFailureError,
-    UnsupportedOperatingSystemError
-)
-
 
 def send_to_remote(remote_id, msg):
     client.send_once(remote_id, msg)
@@ -37,14 +22,14 @@ def send_to_remote(remote_id, msg):
 def send_to_onkyo_then_sleep(msg, times=1):
     for _ in range(times):
         send_to_remote(ONKYO_REMOTE_ID, msg)
-        time.sleep(.2)
+        time.sleep(0.2)
 
 
 def press_and_hold_to_onkyo(msg, seconds=0):
     client.send_start(ONKYO_REMOTE_ID, msg)
     time.sleep(seconds)
     client.send_stop(ONKYO_REMOTE_ID, msg)
-    time.sleep(.2)
+    time.sleep(0.2)
 
 
 while True:

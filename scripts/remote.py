@@ -4,15 +4,7 @@ import traceback
 from enum import Enum, StrEnum
 
 import lirc
-from lirc.exceptions import (
-    LircdCommandFailureError,
-    LircdConnectionError,
-    LircdInvalidReplyPacketError,
-    LircdSocketError,
-    LircError,
-    UnsupportedOperatingSystemError,
-)
-from logger import logger
+from logger import CompoundException, logger
 
 
 class RemoteID(StrEnum):
@@ -74,9 +66,6 @@ class RokuButton(StrEnum):
 
 class HoldTime(Enum):
     KITCHEN_SPEAKERS = 3.5
-    VOLUME_ALL_THE_WAY = 10
-    VOLUME_0_TO_60 = 7.5
-    VOLUME_0_TO_30 = 3.9
 
 
 class DiscoLightColor(Enum):
@@ -104,15 +93,9 @@ class Remote:
 
     # new below this line --------------
 
-    async def send_to_remote_async(self, remote_id, msg):
-        try:
-            await self.client.send_once(remote_id, msg)
-        except CompoundException:
-            logger.error(traceback.format_exc())
-
     async def send_to_remote_then_sleep_async(self, remote_id, msg):
-        await self.send_to_remote_async(remote_id, msg)
-        await asyncio.sleep(2.0)
+        self.send_to_remote(remote_id, msg)
+        await asyncio.sleep(5.0)
 
     # old below this line --------------
 
@@ -181,36 +164,6 @@ class Remote:
         self.busy = False
 
     # RECEIVER INPUT
-    def switch_to_dj_mode_and_reset_volume_accordingly_LEGACY(self):
-        logger.info("switching to dj mode (LEGACY)")
-
-        self.receiver_input_source = ReceiverInputSource.DJ
-
-        self.press_and_hold_to_onkyo(
-            OnkyoButton.KEY_VOLUMEDOWN, HoldTime.VOLUME_ALL_THE_WAY.value
-        )
-        self.send_to_onkyo_then_sleep(OnkyoButton.GOTO_DJ_INPUT)
-        self.press_and_hold_to_onkyo(
-            OnkyoButton.KEY_VOLUMEUP, HoldTime.VOLUME_0_TO_60.value
-        )
-
-        logger.info("done switching to dj mode (LEGACY)")
-
-    def switch_to_tv_mode_and_reset_volume_accordingly_LEGACY(self):
-        logger.info("switching to tv mode (LEGACY)")
-
-        self.receiver_input_source = ReceiverInputSource.TV
-
-        self.press_and_hold_to_onkyo(
-            OnkyoButton.KEY_VOLUMEDOWN, HoldTime.VOLUME_ALL_THE_WAY.value
-        )
-        self.send_to_onkyo_then_sleep(OnkyoButton.GOTO_TV_INPUT)
-        self.press_and_hold_to_onkyo(
-            OnkyoButton.KEY_VOLUMEUP, HoldTime.VOLUME_0_TO_30.value
-        )
-
-        logger.info("done switching to tv mode (LEGACY)")
-
     def switch_to_dj_mode(self):
         logger.info("switching to dj mode")
         self.receiver_input_source = ReceiverInputSource.DJ
