@@ -11,4 +11,5 @@
 # it should appear only once).
 disable=
     missing-class-docstring,
+    missing-module-docstring,
     missing-function-docstring
