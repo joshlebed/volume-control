@@ -159,12 +159,12 @@ class Coordinator:
                 or event.code == NUMPAD_VOLUME_DOWN_TRIGGER
             ):
                 if self.holding:
-                    self.start_task(self.remote.stop_holding_volume_button())
+                    self.remote.stop_holding_volume_button()
                     self.holding = False
             elif (
                 event.code == MACROPAD_VOLUME_UP_TRIGGER
                 or event.code == NUMPAD_VOLUME_UP_TRIGGER
             ):
                 if self.holding:
-                    self.start_task(self.remote.stop_holding_volume_button())
+                    self.remote.stop_holding_volume_button()
                     self.holding = False
