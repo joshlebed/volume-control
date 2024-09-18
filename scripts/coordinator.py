@@ -89,17 +89,17 @@ class Coordinator:
             # if a task is running, then don't accept a new task
             if self.current_task and not self.current_task.done():
                 # if cancel task button is pressed, cancel the current task
-                if event.code == NUMPAD_CANCEL_TASK_TRIGGER:
-                    self.current_task.cancel()
-                    print("cancelled task")
-                    print(self.current_task)
-                    print(self.current_task.done())
-                    print(self.current_task.cancelled())
-                    print(self.current_task.exception())
-                    print(self.current_task.result())
-                    print(self.current_task.get_coro())
-                    print(self.current_task.get_stack())
-                    print(self.current_task.get_name())
+                # if event.code == NUMPAD_CANCEL_TASK_TRIGGER:
+                #     self.current_task.cancel()
+                #     print("cancelled task")
+                #     print(self.current_task)
+                #     print(self.current_task.done())
+                #     print(self.current_task.cancelled())
+                #     print(self.current_task.exception())
+                #     print(self.current_task.result())
+                #     print(self.current_task.get_coro())
+                #     print(self.current_task.get_stack())
+                #     print(self.current_task.get_name())
 
                 # if any other key is pressed, do nothing
                 return
@@ -110,7 +110,7 @@ class Coordinator:
             ):
                 if not self.holding:
                     self.holding = True
-                    self.remote.start_holding_volume_down_ASYNC()
+                    self.remote.start_holding_volume_down()
 
             elif (
                 event.code == MACROPAD_VOLUME_UP_TRIGGER
@@ -118,36 +118,41 @@ class Coordinator:
             ):
                 if not self.holding:
                     self.holding = True
-                    self.remote.start_holding_volume_up_ASYNC()
-            # elif event.code == MACROPAD_TOGGLE_DJ_TV_MODE_TRIGGER:
-            #     self.remote.toggle_input_tv_to_dj()
-            # elif event.code == MACROPAD_TOGGLE_KITCHEN_SPEAKERS_TRIGGER:
-            #     self.remote.toggle_kitchen_speakers()
+                    self.remote.start_holding_volume_up()
+
             elif event.code == NUMPAD_KITCHEN_SPEAKERS_ON_TRIGGER:
-                self.start_task(self.remote.turn_kitchen_speakers_on_ASYNC())
+                self.start_task(self.remote.turn_kitchen_speakers_on())
+
             elif event.code == NUMPAD_KITCHEN_SPEAKERS_OFF_TRIGGER:
-                self.start_task(self.remote.turn_kitchen_speakers_off_ASYNC())
+                self.start_task(self.remote.turn_kitchen_speakers_off())
+
             elif (
                 event.code == MACROPAD_TOGGLE_SURROUND_MODE_TRIGGER
                 or event.code == NUMPAD_TOGGLE_SURROUND_MODE_TRIGGER
             ):
                 self.start_task(self.remote.toggle_surround_mode())
-            elif event.code == MACROPAD_TOGGLE_DISCO_LIGHT_RED_YELLOW_TRIGGER:
-                self.start_task(self.remote.toggle_disco_light_red_yellow())
+
             elif event.code == NUMPAD_DJ_MODE_TRIGGER:
-                self.start_task(self.remote.switch_to_dj_mode_ASYNC())
+                self.start_task(self.remote.switch_to_dj_mode())
+
             elif event.code == NUMPAD_TV_MODE_TRIGGER:
-                self.start_task(self.remote.switch_to_tv_mode_ASYNC())
+                self.start_task(self.remote.switch_to_tv_mode())
+
             elif event.code == NUMPAD_DISCO_LIGHT_WHITE_TRIGGER:
                 self.start_task(self.remote.turn_disco_light_white())
+
             elif event.code == NUMPAD_DISCO_LIGHT_YELLOW_TRIGGER:
                 self.start_task(self.remote.turn_disco_light_yellow())
+
             elif event.code == NUMPAD_DISCO_LIGHT_RED_TRIGGER:
                 self.start_task(self.remote.turn_disco_light_red())
+
             elif event.code == NUMPAD_DISCO_LIGHT_TOGGLE_TRIGGER:
                 self.start_task(self.remote.toggle_disco_light_power())
+
             elif event.code == NUMPAD_SPOTIFY_DARK_MODE_TRIGGER:
                 self.start_task(self.remote.toggle_spotify_dark_mode())
+
             elif event.code == NUMPAD_TV_POWER_TRIGGER:
                 self.start_task(self.remote.toggle_tv_power())
 
@@ -159,12 +164,13 @@ class Coordinator:
                 or event.code == NUMPAD_VOLUME_DOWN_TRIGGER
             ):
                 if self.holding:
-                    self.remote.stop_holding_volume_button_ASYNC()
+                    self.remote.stop_holding_volume_button()
                     self.holding = False
+
             elif (
                 event.code == MACROPAD_VOLUME_UP_TRIGGER
                 or event.code == NUMPAD_VOLUME_UP_TRIGGER
             ):
                 if self.holding:
-                    self.remote.stop_holding_volume_button_ASYNC()
+                    self.remote.stop_holding_volume_button()
                     self.holding = False
