@@ -53,6 +53,7 @@ NUMPAD_DISCO_LIGHT_WHITE_TRIGGER = BACKSPACE_CODE
 NUMPAD_DISCO_LIGHT_YELLOW_TRIGGER = MINUS_CODE
 NUMPAD_DISCO_LIGHT_RED_TRIGGER = PLUS_CODE
 NUMPAD_DISCO_LIGHT_TOGGLE_TRIGGER = ENTER_CODE
+NUMPAD_DISCO_LIGHT_TOGGLE_SHOW_TRIGGER = STAR_CODE
 NUMPAD_SPOTIFY_DARK_MODE_TRIGGER = TAB_CODE
 NUMPAD_TV_POWER_TRIGGER = EQUALS_CODE
 NUMPAD_TOGGLE_SURROUND_MODE_TRIGGER = NUM_0_CODE
@@ -147,6 +148,9 @@ class Coordinator:
 
             elif event.code == NUMPAD_DISCO_LIGHT_TOGGLE_TRIGGER:
                 self.start_task(self.remote.toggle_disco_light_power())
+
+            elif event.code == NUMPAD_DISCO_LIGHT_TOGGLE_SHOW_TRIGGER:
+                self.start_task(self.remote.toggle_disco_light_show())
 
             elif event.code == NUMPAD_SPOTIFY_DARK_MODE_TRIGGER:
                 self.start_task(self.remote.toggle_spotify_dark_mode())

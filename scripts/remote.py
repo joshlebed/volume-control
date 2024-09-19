@@ -64,6 +64,28 @@ class RokuButton(StrEnum):
     MUTE = "MUTE"
 
 
+class DiscoLightButton(StrEnum):
+    STAND_BY = "STAND_BY"
+    FULL_ON = "FULL_ON"
+    FADE_GOBO = "FADE_GOBO"
+    STROBE = "STROBE"
+    COLOR = "COLOR"
+    DIMMER_UP = "DIMMER_UP"
+    DIMMER_DOWN = "DIMMER_DOWN"
+    BUTTON_1 = "1"
+    BUTTON_2 = "2"
+    BUTTON_3 = "3"
+    BUTTON_4 = "4"
+    BUTTON_5 = "5"
+    BUTTON_6 = "6"
+    BUTTON_7 = "7"
+    BUTTON_8 = "8"
+    BUTTON_9 = "9"
+    SHOW_0 = "SHOW_0"
+    SOUND_ON = "SOUND_ON"
+    SOUND_OFF = "SOUND_OFF"
+
+
 class HoldTime(Enum):
     KITCHEN_SPEAKERS = 3.5
 
@@ -219,25 +241,30 @@ class Remote:
     # DISCO LIGHT CONTROLS
     async def turn_disco_light_white(self):
         logger.info("turning disco light to single color white mode")
-        await self.send_to_disco_light_then_sleep("COLOR")
-        await self.send_to_disco_light_then_sleep("9")
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.BUTTON_9)
         logger.info("done turning disco light to single color yellow mode")
 
     async def turn_disco_light_yellow(self):
         logger.info("turning disco light to single color yellow mode")
-        await self.send_to_disco_light_then_sleep("COLOR")
-        await self.send_to_disco_light_then_sleep("2")
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.BUTTON_2)
         logger.info("done turning disco light to single color yellow mode")
 
     async def turn_disco_light_red(self):
         logger.info("turning disco light to single color red mode")
-        await self.send_to_disco_light_then_sleep("COLOR")
-        await self.send_to_disco_light_then_sleep("1")
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.BUTTON_1)
         logger.info("done turning disco light to single color red mode")
 
     async def toggle_disco_light_power(self):
         logger.info("toggling disco spotlight power on/off")
-        await self.send_to_disco_light_then_sleep("STAND_BY")
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.STAND_BY)
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.SOUND_OFF)
+
+    async def toggle_disco_light_show(self):
+        logger.info("toggling disco light show")
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.SHOW_0)
 
     async def toggle_spotify_dark_mode(self):
         logger.info("toggling spotify dark mode")
