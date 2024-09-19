@@ -42,10 +42,10 @@ async def listen_to_keyboard_events(coordinator):
 
     async with asyncio.TaskGroup() as tg:
         for path_to_device in [
-            "/dev/input/by-id/usb-1189_8890-event-if02",
-            "/dev/input/by-id/usb-1189_8890-if02-event-kbd",
-            "/dev/input/by-id/usb-1189_8890-event-kbd",
-            "/dev/input/by-id/usb-1189_8890-if03-event-mouse",
+            # "/dev/input/by-id/usb-1189_8890-event-if02",
+            # "/dev/input/by-id/usb-1189_8890-if02-event-kbd",
+            # "/dev/input/by-id/usb-1189_8890-event-kbd",
+            # "/dev/input/by-id/usb-1189_8890-if03-event-mouse",
             "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-kbd",  # good
             # "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-if01-event-mouse",  # good (probably unnecessary)
             # "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-if01",  # good (probably unnecessary)
