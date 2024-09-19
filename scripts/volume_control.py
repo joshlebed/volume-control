@@ -50,6 +50,11 @@ async def listen_to_keyboard_events(coordinator):
             # "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-if01-event-mouse",  # good (probably unnecessary)
             # "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-event-if01",  # good (probably unnecessary)
             # "/dev/input/by-id/usb-MOSART_Semi._2.4G_Keyboard_Mouse-if01-mouse", # breaks
+            "/dev/input/by-id/usb-5131_FQ-K002_RGB-event-kbd",
+            # usb-5131_FQ-K002_RGB-if01-event-mouse
+            # usb-5131_FQ-K002_RGB-if01-mouse
+            # usb-5131_FQ-K002_RGB-if02-event-joystick
+            # usb-5131_FQ-K002_RGB-if02-joystick
         ]:
             tg.create_task(
                 handle_events(evdev.InputDevice(path_to_device), coordinator)
