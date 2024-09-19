@@ -248,3 +248,7 @@ class Remote:
     async def toggle_tv_power(self):
         logger.info("toggling TV power")
         await self.send_to_roku_then_sleep(RokuButton.POWER)
+
+    async def pause_spotify(self):
+        logger.info("pausing tv")
+        await self.send_to_roku_then_sleep(RokuButton.PLAY_PAUSE)

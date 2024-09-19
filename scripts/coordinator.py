@@ -57,6 +57,7 @@ NUMPAD_SPOTIFY_DARK_MODE_TRIGGER = TAB_CODE
 NUMPAD_TV_POWER_TRIGGER = EQUALS_CODE
 NUMPAD_TOGGLE_SURROUND_MODE_TRIGGER = NUM_0_CODE
 NUMPAD_CANCEL_TASK_TRIGGER = ESCAPE_CODE
+NUMPAD_PAUSE_TRIGGER = PERIOD_CODE
 
 
 class Coordinator:
@@ -152,6 +153,9 @@ class Coordinator:
 
             elif event.code == NUMPAD_TV_POWER_TRIGGER:
                 self.start_task(self.remote.toggle_tv_power())
+
+            elif event.code == NUMPAD_PAUSE_TRIGGER:
+                self.start_task(self.remote.pause())
 
         # release key event
         elif event.value == 0:
