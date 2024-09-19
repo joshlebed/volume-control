@@ -262,9 +262,9 @@ class Remote:
         await self.send_to_disco_light_then_sleep(DiscoLightButton.STAND_BY)
         await self.send_to_disco_light_then_sleep(DiscoLightButton.SOUND_OFF)
 
-    async def toggle_disco_light_show(self):
-        logger.info("toggling disco light show")
-        await self.send_to_disco_light_then_sleep(DiscoLightButton.SHOW_0)
+    async def toggle_disco_light_fade(self):
+        logger.info("toggling disco light fade")
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.FADE_GOBO)
 
     async def toggle_spotify_dark_mode(self):
         logger.info("toggling spotify dark mode")
