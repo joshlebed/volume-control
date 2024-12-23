@@ -1,2 +1,3 @@
 lirc
 evdev
+requests

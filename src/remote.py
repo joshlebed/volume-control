@@ -1,9 +1,10 @@
 import asyncio
-import time
 import traceback
 from enum import Enum, StrEnum
 
 import lirc
+import requests
+
 from logger import CompoundException, logger
 
 
@@ -259,6 +260,14 @@ class Remote:
 
     async def toggle_disco_light_power(self):
         logger.info("toggling disco spotlight power on/off")
+        url = "http://192.168.0.181:8123/api/services/switch/toggle"
+        token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhOWE5YmVkMDQ5YTY0MjUxOGY0OTc1ZTYzMTIxNjA3NCIsImlhdCI6MTY2NjA3MDIyMSwiZXhwIjoxOTgxNDMwMjIxfQ.Dz_oPS2tIup2PB89bi6SFAZHxortQh3kZ5hrw-gWdu4"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        data = {"entity_id": "switch.local_disco_ball"}
+        requests.post(url, headers=headers, json=data)
         await self.send_to_disco_light_then_sleep(DiscoLightButton.STAND_BY)
         await self.send_to_disco_light_then_sleep(DiscoLightButton.SOUND_OFF)
 
