@@ -9,7 +9,7 @@ In this directory, run:
 ```bash
 python3.11 -m venv .venv   # create virtual environment
 source .venv/bin/activate  # activate virtual environment
-pip install -e ".[dev]"    # install dependencies locally
+pip install -r src/requirements.txt    # install dependencies locally
 ```
 
 ## keyboard media controller script
@@ -92,8 +92,8 @@ tail -f /tmp/volume_controller.log
 add this line to your `.zshrc` or `.bashrc` to get some useful aliases:
 
 ```bash
-source [PATH_TO_THIS_REPO]/src/shell-aliases.sh
-source /home/pi/code/volume-control/src/shell-aliases.sh
+export PATH_TO_VOLUME_CONTROL_REPO="/home/pi/code/volume-control"
+source "${PATH_TO_VOLUME_CONTROL_REPO}/src/shell-aliases.sh"
 ```
 
 ### run in foreground for debugging
