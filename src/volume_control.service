@@ -1,5 +1,5 @@
 [Unit]
-Description=My Python Script
+Description=Volume Control
 
 [Service]
 ExecStart=nohup /home/pi/code/volume-control/.venv/bin/python /home/pi/code/volume-control/src/volume_control.py &> /tmp/nohup.out & disown
