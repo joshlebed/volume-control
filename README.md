@@ -96,6 +96,10 @@ export PATH_TO_VOLUME_CONTROL_REPO="/home/pi/code/volume-control"
 source "${PATH_TO_VOLUME_CONTROL_REPO}/src/shell-aliases.sh"
 ```
 
+### auto run on reboot
+
+copy `volume_control.service` to `/etc/systemd/system/` and run `sudo systemctl enable volume_control.service` 
+
 ### run in foreground for debugging
 
 ```bash

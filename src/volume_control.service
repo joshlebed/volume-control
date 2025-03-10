@@ -1,0 +1,11 @@
+[Unit]
+Description=My Python Script
+
+[Service]
+ExecStart=nohup /home/pi/code/volume-control/.venv/bin/python /home/pi/code/volume-control/src/volume_control.py &> /tmp/nohup.out & disown
+Restart=always
+User=pi
+Group=pi
+
+[Install]
+WantedBy=multi-user.target
