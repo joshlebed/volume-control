@@ -1,9 +1,10 @@
 import asyncio
-import time
 import traceback
 from enum import Enum, StrEnum
 
 import lirc
+import requests
+
 from logger import CompoundException, logger
 
 
@@ -62,6 +63,28 @@ class RokuButton(StrEnum):
     VOLUME_UP = "VOLUME_UP"
     VOLUME_DOWN = "VOLUME_DOWN"
     MUTE = "MUTE"
+
+
+class DiscoLightButton(StrEnum):
+    STAND_BY = "STAND_BY"
+    FULL_ON = "FULL_ON"
+    FADE_GOBO = "FADE_GOBO"
+    STROBE = "STROBE"
+    COLOR = "COLOR"
+    DIMMER_UP = "DIMMER_UP"
+    DIMMER_DOWN = "DIMMER_DOWN"
+    BUTTON_1 = "1"
+    BUTTON_2 = "2"
+    BUTTON_3 = "3"
+    BUTTON_4 = "4"
+    BUTTON_5 = "5"
+    BUTTON_6 = "6"
+    BUTTON_7 = "7"
+    BUTTON_8 = "8"
+    BUTTON_9 = "9"
+    SHOW_0 = "SHOW_0"
+    SOUND_ON = "SOUND_ON"
+    SOUND_OFF = "SOUND_OFF"
 
 
 class HoldTime(Enum):
@@ -219,25 +242,38 @@ class Remote:
     # DISCO LIGHT CONTROLS
     async def turn_disco_light_white(self):
         logger.info("turning disco light to single color white mode")
-        await self.send_to_disco_light_then_sleep("COLOR")
-        await self.send_to_disco_light_then_sleep("9")
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.BUTTON_9)
         logger.info("done turning disco light to single color yellow mode")
 
     async def turn_disco_light_yellow(self):
         logger.info("turning disco light to single color yellow mode")
-        await self.send_to_disco_light_then_sleep("COLOR")
-        await self.send_to_disco_light_then_sleep("2")
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.BUTTON_2)
         logger.info("done turning disco light to single color yellow mode")
 
     async def turn_disco_light_red(self):
         logger.info("turning disco light to single color red mode")
-        await self.send_to_disco_light_then_sleep("COLOR")
-        await self.send_to_disco_light_then_sleep("1")
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.BUTTON_1)
         logger.info("done turning disco light to single color red mode")
 
     async def toggle_disco_light_power(self):
         logger.info("toggling disco spotlight power on/off")
-        await self.send_to_disco_light_then_sleep("STAND_BY")
+        url = "http://192.168.0.181:8123/api/services/switch/toggle"
+        token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhOWE5YmVkMDQ5YTY0MjUxOGY0OTc1ZTYzMTIxNjA3NCIsImlhdCI6MTY2NjA3MDIyMSwiZXhwIjoxOTgxNDMwMjIxfQ.Dz_oPS2tIup2PB89bi6SFAZHxortQh3kZ5hrw-gWdu4"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        data = {"entity_id": "switch.local_disco_ball"}
+        requests.post(url, headers=headers, json=data)
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.STAND_BY)
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.SOUND_OFF)
+
+    async def toggle_disco_light_fade(self):
+        logger.info("toggling disco light fade")
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.FADE_GOBO)
 
     async def toggle_spotify_dark_mode(self):
         logger.info("toggling spotify dark mode")
@@ -248,3 +284,7 @@ class Remote:
     async def toggle_tv_power(self):
         logger.info("toggling TV power")
         await self.send_to_roku_then_sleep(RokuButton.POWER)
+
+    async def pause(self):
+        logger.info("pausing tv")
+        await self.send_to_roku_then_sleep(RokuButton.PLAY_PAUSE)

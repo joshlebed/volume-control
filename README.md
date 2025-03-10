@@ -2,6 +2,16 @@
 
 python service to send IR commands to AV receiver and other IR devices based on keyboard input
 
+## Setup
+
+In this directory, run:
+
+```bash
+python3.11 -m venv .venv   # create virtual environment
+source .venv/bin/activate  # activate virtual environment
+pip install -r src/requirements.txt    # install dependencies locally
+```
+
 ## keyboard media controller script
 
 ### buttons:
@@ -23,7 +33,7 @@ python service to send IR commands to AV receiver and other IR devices based on 
 
 #### wireless numpad
 
-````
+```
 ESC| X |TAB| =     ESC| X |TAB| =
 ---┼---┼---┼---    ---┼---┼---┼---
 NUM| / | * |<-     NUM| / | * |<-
@@ -67,8 +77,9 @@ RET - disco light on/off
 start in background
 
 ```bash
-nohup python3.11 ~/code/volume-control/scripts/volume_control.py &> /tmp/nohup.out & disown
+nohup python3.11 ~/code/volume-control/src/volume_control.py &> /tmp/nohup.out & disown
 ```
+
 
 watch the logs
 
@@ -81,14 +92,18 @@ tail -f /tmp/volume_controller.log
 add this line to your `.zshrc` or `.bashrc` to get some useful aliases:
 
 ```bash
-source [PATH_TO_THIS_REPO]/scripts/shell-aliases.sh
-source /home/pi/code/volume-control/scripts/shell-aliases.sh
+export PATH_TO_VOLUME_CONTROL_REPO="/home/pi/code/volume-control"
+source "${PATH_TO_VOLUME_CONTROL_REPO}/src/shell-aliases.sh"
 ```
+
+### auto run on reboot
+
+copy `volume_control.service` to `/etc/systemd/system/` and run `sudo systemctl enable volume_control.service` 
 
 ### run in foreground for debugging
 
 ```bash
-python3 ~/code/volume-control/scripts/volume_control.py
+python3 ~/code/volume-control/src/volume_control.py
 ```
 
 ### debugging input devices
