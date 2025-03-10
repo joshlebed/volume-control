@@ -80,7 +80,6 @@ start in background
 nohup python3.11 ~/code/volume-control/src/volume_control.py &> /tmp/nohup.out & disown
 ```
 
-
 watch the logs
 
 ```bash
@@ -98,7 +97,26 @@ source "${PATH_TO_VOLUME_CONTROL_REPO}/src/shell-aliases.sh"
 
 ### auto run on reboot
 
-copy `volume_control.service` to `/etc/systemd/system/` and run `sudo systemctl enable volume_control.service` 
+initial setup:
+
+```bash
+cp src/volume_control.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable volume_control.service
+```
+
+reload systemd config after iterating on `src/volume_control.service`:
+
+```bash
+cp src/volume_control.service /etc/systemd/system/
+sudo systemctl daemon-reload
+```
+
+restart (after python code changes):
+
+```bash
+sudo systemctl restart volume_control.service
+```
 
 ### run in foreground for debugging
 
@@ -235,7 +253,8 @@ other option: ssh in from HASSIO and execute python script
 - pros and cons?
 
 figure out how to apply `automated-commands.cron`, and add instructions to README
-````
+
+```
 
 use this:
 https://github.com/jasonacox/tinytuya
@@ -244,3 +263,4 @@ to control disco ball (and other local tuya devices) from keypad
 set this up:
 https://community.home-assistant.io/t/remote-access-with-docker/314345?page=2
 to control home assistant from keypad
+```
