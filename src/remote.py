@@ -277,7 +277,10 @@ class Remote:
 
     async def toggle_spotify_dark_mode(self):
         logger.info("toggling spotify dark mode")
-        await self.send_to_roku_then_sleep(RokuButton.RIGHT, 6)
+        await self.send_to_roku_then_sleep(RokuButton.LEFT)
+        await asyncio.sleep(3)
+        await self.send_to_roku_then_sleep(RokuButton.DOWN)
+        await self.send_to_roku_then_sleep(RokuButton.LEFT, 2)
         await self.send_to_roku_then_sleep(RokuButton.OK)
         await self.send_to_roku_then_sleep(RokuButton.BACK)
 
