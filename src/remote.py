@@ -269,7 +269,7 @@ class Remote:
         data = {"entity_id": "switch.local_disco_ball"}
         requests.post(url, headers=headers, json=data)
         await self.send_to_disco_light_then_sleep(DiscoLightButton.STAND_BY)
-        # await self.send_to_disco_light_then_sleep(DiscoLightButton.SOUND_OFF)
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.SOUND_OFF)
 
     async def toggle_disco_light_fade(self):
         logger.info("toggling disco light fade")
