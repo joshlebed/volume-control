@@ -120,7 +120,7 @@ class Remote:
         try:
             for _ in range(times):
                 self.send_to_remote(remote_id, msg)
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.4)
         except asyncio.CancelledError:
             logger.info("send_to_remote_then_sleep was cancelled")
 

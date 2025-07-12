@@ -240,6 +240,11 @@ systemctl restart lircd.service
 
 <!-- TODO: -->
 
+TODO: update this readme and devx
+
+- update bash commands to use systemctl
+- update devx and venv to use uv and rye
+
 - FOR NETWORKING: https://community.home-assistant.io/t/remote-access-with-docker/314345
 
 try this:
