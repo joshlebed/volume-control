@@ -248,7 +248,7 @@ class Remote:
 
     async def turn_disco_light_yellow(self):
         logger.info("turning disco light to single color yellow mode")
-        await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
+        # await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
         await self.send_to_disco_light_then_sleep(DiscoLightButton.BUTTON_2)
         logger.info("done turning disco light to single color yellow mode")
 
