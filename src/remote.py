@@ -120,7 +120,7 @@ class Remote:
         try:
             for _ in range(times):
                 self.send_to_remote(remote_id, msg)
-                await asyncio.sleep(0.4)
+                await asyncio.sleep(0.2)
         except asyncio.CancelledError:
             logger.info("send_to_remote_then_sleep was cancelled")
 
@@ -248,7 +248,7 @@ class Remote:
 
     async def turn_disco_light_yellow(self):
         logger.info("turning disco light to single color yellow mode")
-        # await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
+        await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
         await self.send_to_disco_light_then_sleep(DiscoLightButton.BUTTON_2)
         logger.info("done turning disco light to single color yellow mode")
 
