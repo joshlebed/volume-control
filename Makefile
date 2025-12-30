@@ -1,11 +1,11 @@
-.PHONY: help install deploy reload restart stop start status logs logs-service run debug test-qlc clean readme start-bg list kill
+.PHONY: help install deploy reload restart stop start status logs logs-service run debug test-qlc clean readme start-bg list kill sync
 
 # Default target
 help:
 	@echo "volume-control - Makefile commands"
 	@echo ""
 	@echo "Setup:"
-	@echo "  make install      Install Python dependencies in venv"
+	@echo "  make sync         Sync dependencies with uv"
 	@echo "  make deploy       Deploy systemd service (requires sudo)"
 	@echo ""
 	@echo "Service Operations (systemd):"
@@ -36,7 +36,6 @@ help:
 # Paths (relative to repo root)
 VENV := .venv
 PYTHON := $(VENV)/bin/python
-PIP := $(VENV)/bin/pip
 SRC := src
 SERVICE := volume_control.service
 
@@ -44,13 +43,12 @@ SERVICE := volume_control.service
 # Setup
 # ============================================================================
 
-install:
-	@echo "Installing dependencies..."
-	$(PIP) install -r $(SRC)/requirements.txt
+sync:
+	@echo "Syncing dependencies with uv..."
+	uv sync
 
-$(VENV):
-	@echo "Creating virtual environment..."
-	python3 -m venv $(VENV)
+# Keep install as alias for backwards compatibility
+install: sync
 
 # ============================================================================
 # Deployment
@@ -102,13 +100,13 @@ logs-service:
 # ============================================================================
 
 run:
-	$(PYTHON) $(SRC)/volume_control.py
+	uv run python $(SRC)/volume_control.py
 
 debug: stop run
 
 test-qlc:
 	@echo "Testing QLC+ connection..."
-	@$(PYTHON) -c "from qlcplus import QLCPlusClient; c = QLCPlusClient(host='192.168.0.221'); c.connect(); print('Connected to QLC+'); print('Functions:', c.get_functions_list()); c.disconnect()"
+	@uv run python -c "from qlcplus import QLCPlusClient; c = QLCPlusClient(host='192.168.0.221'); c.connect(); print('Connected to QLC+'); print('Functions:', c.get_functions_list()); c.disconnect()"
 
 # ============================================================================
 # Process Operations (non-systemd)

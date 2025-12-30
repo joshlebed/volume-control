@@ -1,9 +1,13 @@
 [Unit]
 Description=Volume Control
+After=network.target
 
 [Service]
-ExecStart=nohup /home/pi/code/volume-control/.venv/bin/python /home/pi/code/volume-control/src/volume_control.py &> /tmp/nohup.out & disown
+Type=simple
+WorkingDirectory=/home/pi/code/volume-control
+ExecStart=/home/pi/code/volume-control/.venv/bin/python /home/pi/code/volume-control/src/volume_control.py
 Restart=always
+RestartSec=5
 User=pi
 Group=pi
 

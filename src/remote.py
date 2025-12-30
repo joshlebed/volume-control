@@ -18,6 +18,7 @@ SPOTLIGHT_MODES = {
     "white": 1,
     "red": 2,
     "yellow": 3,
+    "fade": 4,
 }
 
 
@@ -317,8 +318,7 @@ class Remote:
         requests.post(url, headers=headers, json=data)
 
     async def toggle_disco_light_fade(self):
-        # Note: QLC+ doesn't have a fade mode equivalent
-        logger.info("toggle_disco_light_fade called - not supported with QLC+")
+        self.send_spotlight_mode("fade")
 
     async def toggle_spotify_dark_mode(self):
         logger.info("toggling spotify dark mode")

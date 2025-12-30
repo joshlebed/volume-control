@@ -1,0 +1,21 @@
+[project]
+name = "volume-control"
+version = "1.0.0"
+description = "Volume control system for home automation"
+requires-python = ">=3.11"
+dependencies = [
+    "lirc",
+    "evdev",
+    "requests",
+    "qlcplus @ git+ssh://git@github.com/joshlebed/qlc-config.git",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
