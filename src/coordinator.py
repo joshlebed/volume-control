@@ -147,7 +147,7 @@ class Coordinator:
                 self.start_task(self.remote.turn_disco_light_red())
 
             elif event.code == NUMPAD_DISCO_LIGHT_TOGGLE_TRIGGER:
-                self.start_task(self.remote.toggle_disco_light_power())
+                self.start_task(self.remote.toggle_disco_ball_motor())
 
             elif event.code == NUMPAD_DISCO_LIGHT_TOGGLE_FADE_TRIGGER:
                 self.start_task(self.remote.toggle_disco_light_fade())

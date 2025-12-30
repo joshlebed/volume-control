@@ -1,3 +1,4 @@
 lirc
 evdev
 requests
+qlcplus @ git+ssh://git@github.com/joshlebed/qlc-config.git

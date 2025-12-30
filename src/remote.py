@@ -4,8 +4,21 @@ from enum import Enum, StrEnum
 
 import lirc
 import requests
+from qlcplus import QLCPlusClient, QLCPlusError
 
 from logger import CompoundException, logger
+
+# QLC+ WebSocket Configuration
+QLCPLUS_HOST = "192.168.0.221"
+QLCPLUS_WS_PORT = 9999
+
+# Function IDs from QLC+ project
+SPOTLIGHT_MODES = {
+    "off": 0,
+    "white": 1,
+    "red": 2,
+    "yellow": 3,
+}
 
 
 class RemoteID(StrEnum):
@@ -107,7 +120,40 @@ class Remote:
     def __init__(self, client: lirc.Client):
         self.client = client
         self.direct_mode = True
-        self.is_disco_light_on = False
+        self._current_spotlight_mode: str | None = None
+
+    def send_spotlight_mode(self, mode: str) -> bool:
+        """
+        Set the spotlight to a specific mode via QLC+ WebSocket.
+
+        Idempotent: calling with same mode twice is safe.
+        Exclusive: activating one mode deactivates all others.
+        """
+        if mode not in SPOTLIGHT_MODES:
+            logger.error(f"Unknown spotlight mode: {mode}")
+            return False
+
+        # Skip if already in this mode (optimization)
+        if mode == self._current_spotlight_mode:
+            logger.info(f"Spotlight already in {mode} mode, skipping")
+            return True
+
+        try:
+            with QLCPlusClient(host=QLCPLUS_HOST, port=QLCPLUS_WS_PORT) as qlc:
+                # Stop all other modes first
+                for name, func_id in SPOTLIGHT_MODES.items():
+                    if name != mode:
+                        qlc.stop_function(func_id)
+
+                # Start the target mode
+                qlc.start_function(SPOTLIGHT_MODES[mode])
+
+            self._current_spotlight_mode = mode
+            logger.info(f"Set spotlight to {mode} mode (function {SPOTLIGHT_MODES[mode]})")
+            return True
+        except QLCPlusError as e:
+            logger.error(f"Failed to control spotlight via QLC+: {e}")
+            return False
 
     # UTILS
     def send_to_remote(self, remote_id, msg):
@@ -239,27 +285,25 @@ class Remote:
             await self.switch_to_all_channel_stereo()
             self.direct_mode = False
 
-    # DISCO LIGHT CONTROLS
+    # DISCO LIGHT CONTROLS (via QLC+ WebSocket)
     async def turn_disco_light_white(self):
-        logger.info("turning disco light to single color white mode")
-        await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
-        await self.send_to_disco_light_then_sleep(DiscoLightButton.BUTTON_9)
-        logger.info("done turning disco light to single color white mode")
+        logger.info("turning disco light to white mode")
+        self.send_spotlight_mode("white")
 
     async def turn_disco_light_yellow(self):
-        logger.info("turning disco light to single color yellow mode")
-        await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
-        await self.send_to_disco_light_then_sleep(DiscoLightButton.BUTTON_2)
-        logger.info("done turning disco light to single color yellow mode")
+        logger.info("turning disco light to yellow mode")
+        self.send_spotlight_mode("yellow")
 
     async def turn_disco_light_red(self):
-        logger.info("turning disco light to single color red mode")
-        await self.send_to_disco_light_then_sleep(DiscoLightButton.COLOR)
-        await self.send_to_disco_light_then_sleep(DiscoLightButton.BUTTON_1)
-        logger.info("done turning disco light to single color red mode")
+        logger.info("turning disco light to red mode")
+        self.send_spotlight_mode("red")
 
-    async def toggle_disco_light_power(self):
-        logger.info("toggling disco spotlight power on/off")
+    async def turn_disco_light_off(self):
+        logger.info("turning disco light off")
+        self.send_spotlight_mode("off")
+
+    async def toggle_disco_ball_motor(self):
+        logger.info("toggling disco ball motor")
         url = "http://192.168.0.181:8123/api/services/switch/toggle"
         token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhOWE5YmVkMDQ5YTY0MjUxOGY0OTc1ZTYzMTIxNjA3NCIsImlhdCI6MTY2NjA3MDIyMSwiZXhwIjoxOTgxNDMwMjIxfQ.Dz_oPS2tIup2PB89bi6SFAZHxortQh3kZ5hrw-gWdu4"
         headers = {
@@ -268,12 +312,10 @@ class Remote:
         }
         data = {"entity_id": "switch.local_disco_ball"}
         requests.post(url, headers=headers, json=data)
-        await self.send_to_disco_light_then_sleep(DiscoLightButton.STAND_BY)
-        await self.send_to_disco_light_then_sleep(DiscoLightButton.SOUND_OFF)
 
     async def toggle_disco_light_fade(self):
-        logger.info("toggling disco light fade")
-        await self.send_to_disco_light_then_sleep(DiscoLightButton.FADE_GOBO)
+        # Note: QLC+ doesn't have a fade mode equivalent
+        logger.info("toggle_disco_light_fade called - not supported with QLC+")
 
     async def toggle_spotify_dark_mode(self):
         logger.info("toggling spotify dark mode")

@@ -1,271 +1,289 @@
 # volume-control
 
-python service to send IR commands to AV receiver and other IR devices based on keyboard input
+Python service that translates keyboard/numpad input into IR commands (via LIRC) and lighting control (via QLC+) for home AV equipment.
 
-## Setup
+## Architecture
 
-In this directory, run:
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Raspberry Pi (this service)                                                │
+│                                                                             │
+│  USB Numpad/Macropad  ──▶  volume_control.py  ──┬──▶  LIRC  ──▶  IR Blaster │
+│                                                 │                           │
+│                                                 ├──▶  QLC+ (WebSocket:9999) │
+│                                                 │                           │
+│                                                 └──▶  Home Assistant (HTTP) │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                                            │
+                              ┌─────────────────────────────┘
+                              ▼
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│  Onkyo Receiver  │  │  Roku TV         │  │  QLC+ Server     │
+│  (IR)            │  │  (IR)            │  │  192.168.0.221   │
+│                  │  │                  │  │  ↓               │
+│  Volume, Input,  │  │  Navigation,     │  │  ADJ Pinspot     │
+│  Surround Mode   │  │  Power           │  │  Spotlight       │
+└──────────────────┘  └──────────────────┘  └──────────────────┘
+```
+
+## Operations (Quick Reference)
+
+All common operations are available via `make`. Run `make help` to see all commands.
+
+### Service Management
 
 ```bash
-python3.11 -m venv .venv   # create virtual environment
-source .venv/bin/activate  # activate virtual environment
-pip install -r src/requirements.txt    # install dependencies locally
+make status      # Check if service is running
+make restart     # Restart after code changes
+make logs        # Tail application logs
+make logs-service # Tail systemd journal logs
 ```
 
-## keyboard media controller script
-
-### buttons:
-
-#### OG 6 button wired macropad
-
-```
- 1 | 2 | 3
----┼---┼---
- 4 | 5 | 6
-
-1 - vol up
-2 - toggle sound mode: all channel stereo vs direct
-3 - toggle input: dj mode vs tv mode
-4 - vol down
-5 - yellow disco light
-6 - toggle kitchen speakers: on vs off
-```
-
-#### wireless numpad
-
-```
-ESC| X |TAB| =     ESC| X |TAB| =
----┼---┼---┼---    ---┼---┼---┼---
-NUM| / | * |<-     NUM| / | * |<-
----┼---┼---┼---    ---┼---┼---┼---
- 7 | 8 | 9 | -      7 | 8 | 9 | -
----┼---┼---┼---    ---┼---┼---┼---
- 4 | 5 | 6 | +      4 | 5 | 6 | +
----┼---┼---┼---    ---┼---┼---┼---
- 1 | 2 | 3 |        1 | 2 | 3 |
----┴---┼---┤RET    ---┴---┼---┤RET
-   0   | . |          0   | . |
-
-[not implemented yet]
-
-ESC - cancel current command (TODO)
-X - can't remap this button
-TAB - spotify dark mode
-= - turn TV off
-NUM -
-/ -
-* -
-<- - disco light white
-7 - kitchen speakers on
-8 - kitchen speakers off
-9 -
-- - disco light yellow
-4 - TV mode
-5 - DJ mode
-6 -
-+ - disco light red
-1 - volume down
-2 - volume up
-3 -
-0 - toggle stereo/direct
-. -
-RET - disco light on/off
-```
-
-### quickstart
-
-start in background
+### Development
 
 ```bash
-nohup python3.11 ~/code/volume-control/src/volume_control.py &> /tmp/nohup.out & disown
+make debug       # Stop service and run in foreground
+make run         # Run in foreground (without stopping service)
+make test-qlc    # Test QLC+ WebSocket connection
 ```
 
-watch the logs
+## Initial Setup
+
+### 1. Create virtual environment and install dependencies
 
 ```bash
-tail -f /tmp/volume_controller.log
+python3 -m venv .venv
+make install
 ```
 
-### terminal aliases
+### 2. Deploy systemd service
 
-add this line to your `.zshrc` or `.bashrc` to get some useful aliases:
+```bash
+make deploy      # Copies service file, enables on boot
+make start       # Start the service
+```
+
+### 3. (Optional) Shell aliases
+
+Add to `~/.zshrc` or `~/.bashrc`:
 
 ```bash
 export PATH_TO_VOLUME_CONTROL_REPO="/home/pi/code/volume-control"
 source "${PATH_TO_VOLUME_CONTROL_REPO}/src/shell-aliases.sh"
 ```
 
-### auto run on reboot
+## Deployment
 
-initial setup:
+The service runs as a systemd unit (`volume_control.service`).
 
-```bash
-cp src/volume_control.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable volume_control.service
-```
+| File               | Location                                     |
+| ------------------ | -------------------------------------------- |
+| Service definition | `src/volume_control.service`                 |
+| Installed location | `/etc/systemd/system/volume_control.service` |
+| Python venv        | `.venv/`                                     |
+| Application logs   | `/tmp/volume_controller.log`                 |
 
-reload systemd config after iterating on `src/volume_control.service`:
+### Deployment workflow
 
-```bash
-cp src/volume_control.service /etc/systemd/system/
-sudo systemctl daemon-reload
-```
-
-restart (after python code changes):
+After making changes:
 
 ```bash
-sudo systemctl restart volume_control.service
+# Code changes only:
+make restart
+
+# Service file changes:
+make reload
+make restart
+
+# Full redeploy:
+make deploy
+make restart
 ```
 
-### run in foreground for debugging
+### Service configuration
+
+The service is configured to:
+
+- Run as user `pi`
+- Auto-restart on failure
+- Start on boot (via `WantedBy=multi-user.target`)
+
+## Button Mappings
+
+### Wireless Numpad
+
+```
+ESC| X |TAB| =         Function:
+---┼---┼---┼---
+NUM| / | * |<-         TAB = Spotify dark mode
+---┼---┼---┼---        =   = TV power toggle
+ 7 | 8 | 9 | -         <-  = Disco light WHITE
+---┼---┼---┼---        7   = Kitchen speakers ON
+ 4 | 5 | 6 | +         8   = Kitchen speakers OFF
+---┼---┼---┼---        -   = Disco light YELLOW
+ 1 | 2 | 3 |           4   = TV mode
+---┴---┼---┤RET        5   = DJ mode
+   0   | . |           +   = Disco light RED
+                       1   = Volume DOWN (hold)
+                       2   = Volume UP (hold)
+                       0   = Toggle stereo/direct
+                       RET = Disco ball motor toggle
+```
+
+### 6-Button Wired Macropad
+
+```
+ 1 | 2 | 3             1 = Volume UP (hold)
+---┼---┼---            2 = Toggle surround mode
+ 4 | 5 | 6             3 = Toggle DJ/TV mode
+                       4 = Volume DOWN (hold)
+                       5 = Disco light YELLOW
+                       6 = Toggle kitchen speakers
+```
+
+## External Dependencies
+
+### QLC+ (Lighting Control)
+
+- **Host:** 192.168.0.221
+- **Port:** 9999 (WebSocket)
+- **Functions:** off(0), white(1), red(2), yellow(3)
+- **Test:** `make test-qlc`
+
+### Home Assistant (Disco Ball Motor)
+
+- **Host:** 192.168.0.181:8123
+- **Entity:** `switch.local_disco_ball`
+
+### LIRC (IR Blaster)
+
+Remote configurations in `remotes/`:
+
+- `onkyo.lircd.conf` - Onkyo receiver
+- `roku.lircd.conf` - Roku TV
+- `ADJ-REMOTE.lircd.conf` - ADJ disco light (legacy)
+
+## Development
+
+### Run in foreground for debugging
 
 ```bash
-python3 ~/code/volume-control/src/volume_control.py
+make debug    # Stops service and runs in foreground
 ```
 
-### debugging input devices
-
-look in `/dev/input/by-id`
-get inputs with:
+Or manually:
 
 ```bash
-sudo cat /dev/input/*
+make stop
+.venv/bin/python src/volume_control.py
 ```
 
-### old version
+### Debugging input devices
+
+List available input devices:
 
 ```bash
-sudo python3 volume_controller_lirc.py
+ls /dev/input/by-id/
 ```
 
-## keylogger info
+Monitor raw input:
 
-https://github.com/kernc/logkeys
-`sudo logkeys --start --output test.log --device event4`
-`sudo logkeys --start --device event4`
-`python3 ~/code/volume-control/volume_control.py`
+```bash
+sudo cat /dev/input/event*
+```
 
-IR emitter module pinout:
-VCC goes to 5v power - green -> brown
-DAT goes to GPIO 18 (data) - orange -> grey
-GND goes to ground - yellow -> white
+### Project structure
 
-TODO:
+```
+volume-control/
+├── src/
+│   ├── volume_control.py      # Main entry point, event loop
+│   ├── coordinator.py         # Keyboard event handler
+│   ├── remote.py              # IR/QLC+/HTTP command sender
+│   ├── logger.py              # Logging configuration
+│   ├── requirements.txt       # Python dependencies
+│   └── volume_control.service # Systemd service definition
+├── remotes/                   # LIRC remote configurations
+├── Makefile                   # Common operations
+└── README.md
+```
 
-- better docs on how LIRC is used and configured here
-- how do I get new codes from a remote?
+## LIRC Configuration
 
-## LIRC notes
-
-### general notes
-
-this looks like a good guide:
-https://stackoverflow.com/questions/57437261/setup-ir-remote-control-using-lirc-for-the-raspberry-pi-rpi
-
-this is also a pretty good guide:
-https://www.instructables.com/Setup-IR-Remote-Control-Using-LIRC-for-the-Raspber/
-
-## terminal volume commands
+### Test IR commands
 
 ```bash
 irsend SEND_ONCE onkyo KEY_VOLUMEUP
 irsend SEND_ONCE onkyo KEY_VOLUMEDOWN
 ```
 
-## debugging ir emitter
+### Boot configuration
 
-- check this: `sudo vi /boot/config.txt` - it should be
-
-### adding new IR codes workflow:
-
-- https://www.lirc.org/html/configuration-guide.html#appendix-10
-- https://raspberrypi.stackexchange.com/questions/104008/lirc-irrecord-wont-record-buster-mode2-works
-
-for a new device, you'll need to follow this guide to tweak some config settings and get LIRC working
-
-- https://stackoverflow.com/questions/57437261/setup-ir-remote-control-using-lirc-for-the-raspberry-pi-rpi
-
-#### edit the boot config to switch from transmit to receive
-
-```bash
-sudo vim /boot/config.txt
-```
-
-near the end, find this (or add it if it's not there):
+Edit `/boot/config.txt`:
 
 ```conf
-# this line should be uncommented for receiver to work
+# Receiver (for recording new codes)
 dtoverlay=gpio-ir,gpio_pin=17
-# this line should be uncommented for transmitter to work
+
+# Transmitter (normal operation)
 dtoverlay=gpio-ir-tx,gpio_pin=18
 ```
 
-then check the config:
+### Recording new IR codes
+
+1. Stop LIRC and switch to receive mode:
+
+   ```bash
+   sudo systemctl stop lircd.service
+   # Edit /boot/config.txt to enable receiver
+   sudo reboot
+   ```
+
+2. Record codes:
+
+   ```bash
+   sudo irrecord -u -n -d /dev/lirc0 ~/new_remote.lircd.conf
+   ```
+
+3. Install the new remote config:
+
+   ```bash
+   sudo cp ~/new_remote.lircd.conf /etc/lirc/lircd.conf.d/
+   sudo systemctl restart lircd.service
+   ```
+
+4. Switch back to transmit mode in `/boot/config.txt` and reboot.
+
+### IR hardware pinout
+
+| Pin | Connection |
+| --- | ---------- |
+| VCC | 5V power   |
+| DAT | GPIO 18    |
+| GND | Ground     |
+
+## Troubleshooting
+
+### Service won't start
 
 ```bash
-sudo systemctl stop lircd.service
-sudo systemctl start lircd.service
-sudo systemctl status lircd.service
+make status           # Check service status
+make logs-service     # Check systemd logs
+make debug            # Run in foreground to see errors
 ```
 
-and reboot
+### QLC+ connection fails
 
 ```bash
-sudo reboot
+make test-qlc         # Test connection
+ping 192.168.0.221    # Check network
 ```
 
-#### record codes
+Verify QLC+ is running with WebSocket enabled (`-w` flag).
 
-stop LIRCD if it's running:
+### Input device not found
 
 ```bash
-sudo systemctl stop lircd.service
-```
-
-then use irrecord to create a remote config:
-
-```bash
-sudo irrecord -u -n -d /dev/lirc[probably 0 or 1] ~/code/[remote_name].lircd.conf
-```
-
-add those remote codes to this repo in `remotes/*.lird.conf`, then copy to the
-`/etc/lirc/lircd.conf.d/` dir so they get picked up by LIRCD. then restart LIRCD:
-
-```bash
-systemctl restart lircd.service
-```
-
-## notes
-
-<!-- TODO: -->
-
-TODO: update this readme and devx
-
-- update bash commands to use systemctl
-- update devx and venv to use uv and rye
-
-- FOR NETWORKING: https://community.home-assistant.io/t/remote-access-with-docker/314345
-
-try this:
-https://stackoverflow.com/a/49873529/7090159
-https://docs.docker.com/storage/
-https://learn.microsoft.com/en-us/windows/win32/ipc/named-pipes
-
-other option: ssh in from HASSIO and execute python script
-
-- https://community.home-assistant.io/t/run-command-on-docker-container-from-supervised-hassio/235083/3
-- pros and cons?
-
-figure out how to apply `automated-commands.cron`, and add instructions to README
-
-```
-
-use this:
-https://github.com/jasonacox/tinytuya
-to control disco ball (and other local tuya devices) from keypad
-
-set this up:
-https://community.home-assistant.io/t/remote-access-with-docker/314345?page=2
-to control home assistant from keypad
+ls /dev/input/by-id/  # List devices
+# Update device path in src/volume_control.py if needed
 ```
