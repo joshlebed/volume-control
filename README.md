@@ -68,9 +68,16 @@ make start       # Start the service
 Add to `~/.zshrc` or `~/.bashrc`:
 
 ```bash
-export PATH_TO_VOLUME_CONTROL_REPO="/home/pi/code/volume-control"
+export PATH_TO_VOLUME_CONTROL_REPO="/path/to/volume-control"
 source "${PATH_TO_VOLUME_CONTROL_REPO}/src/shell-aliases.sh"
 ```
+
+This provides `vc` as a shorthand for running make commands from anywhere:
+
+- `vc help` - Show available commands
+- `vc start-bg` - Start in background
+- `vc logs` - Tail logs
+- `vc kill` - Stop running processes
 
 ## Deployment
 
