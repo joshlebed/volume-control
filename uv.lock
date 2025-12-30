@@ -111,7 +111,7 @@ wheels = [
 [[package]]
 name = "qlcplus"
 version = "0.1.0"
-source = { git = "ssh://git@github.com/joshlebed/qlc-config.git#cc879b3d1385c1a1e2d5a254113e682a435f435a" }
+source = { git = "ssh://git@github.com/joshlebed/qlc-config.git#bc2166dbf933cc2e97daf23914991e8d4c0a836a" }
 dependencies = [
     { name = "websocket-client" },
 ]

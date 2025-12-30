@@ -140,21 +140,14 @@ class Remote:
             return True
 
         try:
-            qlc = QLCPlusClient(host=QLCPLUS_HOST, port=QLCPLUS_WS_PORT)
-            qlc.connect()
+            with QLCPlusClient(host=QLCPLUS_HOST, port=QLCPLUS_WS_PORT) as qlc:
+                # Stop all other modes first
+                for name, func_id in SPOTLIGHT_MODES.items():
+                    if name != mode:
+                        qlc.stop_function(func_id)
 
-            # Stop all other modes first
-            for name, func_id in SPOTLIGHT_MODES.items():
-                if name != mode:
-                    qlc.stop_function(func_id)
-
-            # Start the target mode
-            qlc.start_function(SPOTLIGHT_MODES[mode])
-
-            # Close without waiting for handshake (avoids 3s delay)
-            if qlc._ws is not None:
-                qlc._ws.close(timeout=0)
-                qlc._ws = None
+                # Start the target mode
+                qlc.start_function(SPOTLIGHT_MODES[mode])
 
             self._current_spotlight_mode = mode
             logger.info(f"spotlight: {mode}")
