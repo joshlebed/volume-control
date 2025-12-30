@@ -1,5 +1,4 @@
 import asyncio
-import time
 import traceback
 from enum import Enum, StrEnum
 
@@ -140,38 +139,24 @@ class Remote:
             return True
 
         try:
-            t0 = time.time()
-            logger.debug(f"[{mode}] Creating client...")
             qlc = QLCPlusClient(host=QLCPLUS_HOST, port=QLCPLUS_WS_PORT)
-
-            t1 = time.time()
-            logger.debug(f"[{mode}] Connecting... (+{t1-t0:.3f}s)")
             qlc.connect()
-
-            t2 = time.time()
-            logger.debug(f"[{mode}] Connected. Stopping other modes... (+{t2-t0:.3f}s)")
 
             # Stop all other modes first
             for name, func_id in SPOTLIGHT_MODES.items():
                 if name != mode:
                     qlc.stop_function(func_id)
 
-            t3 = time.time()
-            logger.debug(f"[{mode}] Starting function {SPOTLIGHT_MODES[mode]}... (+{t3-t0:.3f}s)")
+            # Start the target mode
             qlc.start_function(SPOTLIGHT_MODES[mode])
 
-            t4 = time.time()
-            logger.debug(f"[{mode}] Function started. Disconnecting... (+{t4-t0:.3f}s)")
-            # Use timeout=0 to avoid 3-second wait for close handshake
+            # Close without waiting for handshake (avoids 3s delay)
             if qlc._ws is not None:
                 qlc._ws.close(timeout=0)
                 qlc._ws = None
 
-            t5 = time.time()
-            logger.debug(f"[{mode}] Disconnected. Total: {t5-t0:.3f}s")
-
             self._current_spotlight_mode = mode
-            logger.info(f"Set spotlight to {mode} mode (function {SPOTLIGHT_MODES[mode]})")
+            logger.info(f"spotlight: {mode}")
             return True
         except QLCPlusError as e:
             logger.error(f"Failed to control spotlight via QLC+: {e}")
@@ -309,19 +294,15 @@ class Remote:
 
     # DISCO LIGHT CONTROLS (via QLC+ WebSocket)
     async def turn_disco_light_white(self):
-        logger.info("turning disco light to white mode")
         self.send_spotlight_mode("white")
 
     async def turn_disco_light_yellow(self):
-        logger.info("turning disco light to yellow mode")
         self.send_spotlight_mode("yellow")
 
     async def turn_disco_light_red(self):
-        logger.info("turning disco light to red mode")
         self.send_spotlight_mode("red")
 
     async def turn_disco_light_off(self):
-        logger.info("turning disco light off")
         self.send_spotlight_mode("off")
 
     async def toggle_disco_ball_motor(self):
