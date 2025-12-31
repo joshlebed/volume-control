@@ -60,6 +60,7 @@ NUMPAD_TV_POWER_TRIGGER = EQUALS_CODE
 NUMPAD_TOGGLE_SURROUND_MODE_TRIGGER = NUM_0_CODE
 NUMPAD_CANCEL_TASK_TRIGGER = ESCAPE_CODE
 NUMPAD_PAUSE_TRIGGER = PERIOD_CODE
+NUMPAD_REACTIVE_MODE_TRIGGER = NUM_9_CODE
 
 
 class Coordinator:
@@ -164,6 +165,9 @@ class Coordinator:
 
             elif event.code == NUMPAD_PAUSE_TRIGGER:
                 self.start_task(self.remote.pause())
+
+            elif event.code == NUMPAD_REACTIVE_MODE_TRIGGER:
+                self.start_task(self.remote.enable_reactive_mode())
 
         # release key event
         elif event.value == 0:

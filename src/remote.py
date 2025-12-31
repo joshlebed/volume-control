@@ -4,22 +4,9 @@ from enum import Enum, StrEnum
 
 import lirc
 import requests
-from qlcplus import QLCPlusClient, QLCPlusError
+from qlcplus import set_mode as qlc_set_mode
 
 from logger import CompoundException, logger
-
-# QLC+ WebSocket Configuration
-QLCPLUS_HOST = "192.168.0.221"
-QLCPLUS_WS_PORT = 9999
-
-# Function IDs from QLC+ project
-SPOTLIGHT_MODES = {
-    "off": 0,
-    "white": 1,
-    "red": 2,
-    "yellow": 3,
-    "fade": 4,
-}
 
 
 class RemoteID(StrEnum):
@@ -121,7 +108,6 @@ class Remote:
     def __init__(self, client: lirc.Client):
         self.client = client
         self.direct_mode = True
-        self._current_spotlight_mode: str | None = None
 
     def send_spotlight_mode(self, mode: str) -> bool:
         """
@@ -130,31 +116,12 @@ class Remote:
         Idempotent: calling with same mode twice is safe.
         Exclusive: activating one mode deactivates all others.
         """
-        if mode not in SPOTLIGHT_MODES:
-            logger.error(f"Unknown spotlight mode: {mode}")
-            return False
-
-        # Skip if already in this mode (optimization)
-        if mode == self._current_spotlight_mode:
-            logger.info(f"Spotlight already in {mode} mode, skipping")
-            return True
-
-        try:
-            with QLCPlusClient(host=QLCPLUS_HOST, port=QLCPLUS_WS_PORT) as qlc:
-                # Stop all other modes first
-                for name, func_id in SPOTLIGHT_MODES.items():
-                    if name != mode:
-                        qlc.stop_function(func_id)
-
-                # Start the target mode
-                qlc.start_function(SPOTLIGHT_MODES[mode])
-
-            self._current_spotlight_mode = mode
+        result = qlc_set_mode(mode)
+        if result:
             logger.info(f"spotlight: {mode}")
-            return True
-        except QLCPlusError as e:
-            logger.error(f"Failed to control spotlight via QLC+: {e}")
-            return False
+        else:
+            logger.error(f"Unknown spotlight mode: {mode}")
+        return result
 
     # UTILS
     def send_to_remote(self, remote_id, msg):
@@ -312,6 +279,9 @@ class Remote:
 
     async def toggle_disco_light_fade(self):
         self.send_spotlight_mode("fade")
+
+    async def enable_reactive_mode(self):
+        self.send_spotlight_mode("reactive")
 
     async def toggle_spotify_dark_mode(self):
         logger.info("toggling spotify dark mode")

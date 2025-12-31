@@ -1,4 +1,4 @@
-.PHONY: help install deploy reload restart stop start status logs logs-service run debug test-qlc clean readme start-bg list kill sync
+.PHONY: help install deploy reload restart stop start status logs logs-service run debug test-qlc clean readme start-bg list kill sync update-qlc
 
 # Default target
 help:
@@ -6,6 +6,7 @@ help:
 	@echo ""
 	@echo "Setup:"
 	@echo "  make sync         Sync dependencies with uv"
+	@echo "  make update-qlc   Update qlcplus library from git"
 	@echo "  make deploy       Deploy systemd service (requires sudo)"
 	@echo ""
 	@echo "Service Operations (systemd):"
@@ -46,6 +47,10 @@ SERVICE := volume_control.service
 sync:
 	@echo "Syncing dependencies with uv..."
 	uv sync
+
+update-qlc:
+	@echo "Updating qlcplus library from git..."
+	uv pip install --reinstall --upgrade "qlcplus @ git+ssh://git@github.com/joshlebed/qlc-config.git"
 
 # Keep install as alias for backwards compatibility
 install: sync

@@ -45,6 +45,7 @@ make logs-service # Tail systemd journal logs
 make debug       # Stop service and run in foreground
 make run         # Run in foreground (without stopping service)
 make test-qlc    # Test QLC+ WebSocket connection
+make update-qlc  # Update qlcplus library from git (use after changes to qlc-config repo)
 ```
 
 ## Initial Setup
@@ -127,12 +128,14 @@ NUM| / | * |<-         TAB = Spotify dark mode
  7 | 8 | 9 | -         <-  = Disco light WHITE
 ---┼---┼---┼---        7   = Kitchen speakers ON
  4 | 5 | 6 | +         8   = Kitchen speakers OFF
----┼---┼---┼---        -   = Disco light YELLOW
- 1 | 2 | 3 |           4   = TV mode
----┴---┼---┤RET        5   = DJ mode
-   0   | . |           +   = Disco light RED
+---┼---┼---┼---        9   = Active listening (MIDI reactive)
+ 1 | 2 | 3 |           -   = Disco light YELLOW
+---┴---┼---┤RET        4   = TV mode
+   0   | . |           5   = DJ mode
+                       +   = Disco light RED
                        1   = Volume DOWN (hold)
                        2   = Volume UP (hold)
+                       3   = Disco light OFF
                        0   = Toggle stereo/direct
                        RET = Disco ball motor toggle
 ```
