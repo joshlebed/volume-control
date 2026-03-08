@@ -258,7 +258,7 @@ class Remote:
         self.send_spotlight_mode("white")
 
     async def turn_disco_light_yellow(self):
-        self.send_spotlight_mode("yellow")
+        self.send_spotlight_mode("yellow_pretty")
 
     async def turn_disco_light_red(self):
         self.send_spotlight_mode("red")
