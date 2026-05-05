@@ -2,6 +2,8 @@
 
 Python service that translates keyboard/numpad input into IR commands (via LIRC) and lighting control (via QLC+) for home AV equipment.
 
+> **Deployed in the homelab**: runs as a systemd service on `pi`. Sends IR via LIRC to the Onkyo receiver and Roku TV; sends WebSocket commands to the QLC+ daemon on `mediaserver` (`192.168.0.221:9999`); sends HTTP commands to Home Assistant on `pi:8123`. Cross-cutting infra docs live in [`homelab-infra`](https://github.com/joshlebed/homelab-infra).
+
 ## Architecture
 
 ```
