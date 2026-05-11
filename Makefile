@@ -4,12 +4,15 @@
 help:
 	@echo "volume-control - Makefile commands"
 	@echo ""
-	@echo "Setup:"
-	@echo "  make sync         Sync dependencies with uv"
-	@echo "  make update-qlc   Update qlcplus library from git"
-	@echo "  make deploy       Deploy systemd service (requires sudo)"
+	@echo "Publish (run from LAPTOP):"
+	@echo "  make deploy           Push code, ssh-pull on Pi, restart systemd"
 	@echo ""
-	@echo "Service Operations (systemd):"
+	@echo "Setup (run ON the Pi):"
+	@echo "  make sync             Sync Python dependencies with uv"
+	@echo "  make update-qlc       Update qlcplus library from git"
+	@echo "  make install-systemd  First-time systemd unit install (requires sudo)"
+	@echo ""
+	@echo "Service Operations (systemd, run ON the Pi):"
 	@echo "  make start        Start the systemd service"
 	@echo "  make stop         Stop the systemd service"
 	@echo "  make restart      Restart the systemd service"
@@ -59,12 +62,31 @@ install: sync
 # Deployment
 # ============================================================================
 
+# `make deploy` from the laptop = push code + ssh-pull + restart the
+# already-installed systemd service. The standardized verb across all
+# homelab child repos (see homelab-infra/docs/agent-onboarding.md).
+#
+# First-time systemd-unit installation lives in `make install-systemd`
+# below (this used to be the `make deploy` target before 2026-05;
+# `deploy-systemd` is kept as a back-compat alias if you have muscle
+# memory).
 deploy:
-	@echo "Deploying systemd service..."
+	@echo "→ git push origin main"
+	git push origin main
+	@echo "→ ssh pi: pull + make restart"
+	ssh pi "cd /home/pi/code/volume-control && git pull --rebase origin main && make restart"
+
+install-systemd:
+	@echo "Installing systemd service (one-time, run ON the Pi)..."
 	sudo cp $(SRC)/$(SERVICE) /etc/systemd/system/
 	sudo systemctl daemon-reload
 	sudo systemctl enable $(SERVICE)
-	@echo "Service deployed and enabled. Run 'make start' to start it."
+	@echo "Service installed + enabled. Run 'make start' to start it."
+
+# Back-compat alias for the previous semantic of `make deploy` (install
+# the systemd unit). Most agents/humans now want `make deploy` to mean
+# "publish code changes" — see above.
+deploy-systemd: install-systemd
 
 reload:
 	@echo "Reloading systemd configuration..."
