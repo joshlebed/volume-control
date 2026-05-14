@@ -64,7 +64,7 @@ install: sync
 
 # `make deploy` from the laptop = push code + ssh-pull + restart the
 # already-installed systemd service. The standardized verb across all
-# homelab child repos (see homelab-infra/docs/agent-onboarding.md).
+# homelab child repos (see homelab/docs/agent-onboarding.md).
 #
 # First-time systemd-unit installation lives in `make install-systemd`
 # below (this used to be the `make deploy` target before 2026-05;

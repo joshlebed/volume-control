@@ -3,12 +3,12 @@ read @README.md for high level context on the repo.
 # agent notes for volume-control
 
 Cross-cutting infra docs (network, hosts, dev workflow, safety rails) live in
-the sibling [`homelab-infra`](https://github.com/joshlebed/homelab-infra) repo.
-If `~/code/homelab-infra` (or `/home/pi/code/homelab-infra` on the Pi) doesn't
+the sibling [`homelab`](https://github.com/joshlebed/homelab) repo.
+If `~/code/homelab` (or `/home/pi/code/homelab` on the Pi) doesn't
 exist, clone it:
 
 ```bash
-git clone git@github.com:joshlebed/homelab-infra.git ../homelab-infra
+git clone git@github.com:joshlebed/homelab.git ../homelab
 ```
 
 ## deployed on
@@ -66,6 +66,6 @@ target. `make logs` first, then `make test-qlc` / `irsend` / `curl` to isolate.
 
 This service is the primary AV interface in the home — when it's broken, nobody
 can change the volume or switch inputs without finding a phone/laptop. See
-`../homelab-infra/CLAUDE.md` for the full safety-rail policy. Before pushing
+`../homelab/CLAUDE.md` for the full safety-rail policy. Before pushing
 changes that affect button mappings or service startup, `make debug` locally on
 the Pi.
