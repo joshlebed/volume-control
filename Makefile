@@ -1,4 +1,4 @@
-.PHONY: help install deploy reload restart stop start status logs logs-service run debug test-qlc clean readme start-bg list kill sync update-qlc
+.PHONY: help install deploy reload restart stop start status logs logs-service run debug test-qlc clean readme start-bg list kill sync update-qlc check
 
 # Default target
 help:
@@ -34,6 +34,7 @@ help:
 	@echo "  make test-qlc     Test QLC+ connection"
 	@echo ""
 	@echo "Other:"
+	@echo "  make check        Fast local validators (compose / py / sh syntax)"
 	@echo "  make readme       Show README"
 	@echo "  make clean        Remove Python cache files"
 
@@ -64,7 +65,7 @@ install: sync
 
 # `make deploy` from the laptop = push code + ssh-pull + restart the
 # already-installed systemd service. The standardized verb across all
-# homelab child repos (see homelab/docs/agent-onboarding.md).
+# homelab child repos (see homelab/CLAUDE.md).
 #
 # First-time systemd-unit installation lives in `make install-systemd`
 # below (this used to be the `make deploy` target before 2026-05;
@@ -160,3 +161,8 @@ readme:
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+
+# Fast local validators (compose / py / sh syntax). Delegates to homelab's
+# check.sh — single source of truth across child repos.
+check:
+	@../homelab/scripts/check.sh "$(PWD)"
