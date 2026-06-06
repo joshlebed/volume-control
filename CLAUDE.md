@@ -62,6 +62,15 @@ target. `make logs` first, then `make test-qlc` / `irsend` / `curl` to isolate.
    press-to-toggle keys. Watch for race conditions when refactoring
    `coordinator.py`.
 
+5. **The lircd socket can desync.** If a `send_stop()` races lircd's repeat
+   handling (lircd logs `busy: repeating` in `journalctl -u lircd`), the
+   client's socket goes permanently out of sync — every later lirc command
+   times out after 5s while a fresh connection (`irsend`) works fine. The
+   retry loop in `volume_control.py` recreates the connection via
+   `fresh_lirc_client()` after every crash, so this now self-heals (~10s dead
+   window). If volume buttons stay dead anyway, `make restart` and check
+   `/tmp/volume_controller.log` for repeated `TimeoutError`.
+
 ## production-critical reminder
 
 This service is the primary AV interface in the home — when it's broken, nobody

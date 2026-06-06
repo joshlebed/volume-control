@@ -72,11 +72,32 @@ async def listen_to_keyboard_events(coordinator):
     )
 
 
+def fresh_lirc_client(old_client: lirc.Client) -> lirc.Client:
+    """Replace a possibly-desynced lircd connection with a fresh one.
+
+    A send_stop() timeout mid-repeat leaves the old socket permanently
+    desynced (every later command times out) and can leave lircd stuck
+    repeating a key. Close the old connection, open a new one, and
+    best-effort stop any orphaned repeat.
+    """
+    try:
+        old_client.close()
+    except Exception:
+        logger.info("failed to close old lirc client, continuing anyway")
+
+    client = lirc.Client()
+    try:
+        client.send_stop()
+    except Exception:
+        pass  # "not repeating" is the normal case
+
+    return client
+
+
 def main():
     logger.info("--------------------------------------------")
     logger.info("starting up volume control server")
-    lirc_client = lirc.Client()
-    remote = Remote(lirc_client)
+    remote = Remote(lirc.Client())
     coordinator = Coordinator(remote)
 
     while True:
@@ -95,27 +116,28 @@ def main():
             if isinstance(e, FileNotFoundError):
                 logger.info(
                     "caught FileNotFoundError, that probably means"
-                    + "the keyboard was unplugged at startup:"
+                    + " the keyboard was unplugged at startup:"
                 )
-                logger.exception(e)
+            elif isinstance(e, TimeoutError):
                 logger.info(
-                    f"waiting {RETRY_TIME_SECONDS} seconds and then trying again"
+                    "caught TimeoutError, that probably means the lircd"
+                    + " socket desynced (e.g. send_stop raced a repeat):"
                 )
-                time.sleep(RETRY_TIME_SECONDS)
-            if isinstance(e, OSError):
+            elif isinstance(e, OSError):
                 logger.info(
                     "caught OSError, that probably means the keyboard got unplugged:"
                 )
-                logger.exception(e)
-                logger.info(
-                    f"waiting {RETRY_TIME_SECONDS} seconds and then trying again"
-                )
-                time.sleep(RETRY_TIME_SECONDS)
             else:
                 logger.info(e)
                 logger.info("caught some other type of error. quitting")
                 logger.exception(e)
                 break
+
+            logger.exception(e)
+            logger.info(f"waiting {RETRY_TIME_SECONDS} seconds and then trying again")
+            time.sleep(RETRY_TIME_SECONDS)
+            # don't let the retry inherit a poisoned lircd connection
+            remote.client = fresh_lirc_client(remote.client)
 
 
 if __name__ == "__main__":
