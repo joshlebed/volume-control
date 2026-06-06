@@ -4,6 +4,7 @@ from enum import Enum, StrEnum
 
 import lirc
 import requests
+from qlcplus import QLCPlusError
 from qlcplus import set_mode as qlc_set_mode
 
 from logger import CompoundException, logger
@@ -116,7 +117,13 @@ class Remote:
         Idempotent: calling with same mode twice is safe.
         Exclusive: activating one mode deactivates all others.
         """
-        result = qlc_set_mode(mode)
+        try:
+            result = qlc_set_mode(mode)
+        except QLCPlusError as e:
+            # QLC+ host unreachable (e.g. mediaserver down). Log and carry on —
+            # a dead lighting server must never crash the keypad event loop.
+            logger.error(f"QLC+ unreachable, spotlight '{mode}' ignored: {e}")
+            return False
         if result:
             logger.info(f"spotlight: {mode}")
         else:
