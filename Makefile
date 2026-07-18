@@ -1,4 +1,4 @@
-.PHONY: help install deploy reload restart stop start status logs logs-service run debug test-qlc clean readme start-bg list kill sync update-qlc check
+.PHONY: help install deploy reload restart stop start status logs logs-service run debug test test-deps test-qlc clean readme start-bg list kill sync update-qlc check
 
 # Default target
 help:
@@ -31,6 +31,8 @@ help:
 	@echo "Development:"
 	@echo "  make run          Run in foreground"
 	@echo "  make debug        Stop service and run in foreground"
+	@echo "  make test         Run the test suite (sudo also runs uinput integration test)"
+	@echo "  make test-deps    Install test dependencies (pytest) into the venv"
 	@echo "  make test-qlc     Test QLC+ connection"
 	@echo ""
 	@echo "Other:"
@@ -131,6 +133,17 @@ run:
 	uv run python $(SRC)/volume_control.py
 
 debug: stop run
+
+# Run the test suite. The unit tests (device-supervision control flow) need only
+# the stdlib and run anywhere. The evdev/uinput integration test auto-skips
+# unless /dev/uinput is writable, so run `sudo make test` on the Pi to include
+# it. Requires pytest (see `make test-deps`).
+test:
+	@$(PYTHON) -m pytest -v
+
+# pytest lives in the `dev` dependency group; install it into the venv.
+test-deps:
+	uv pip install pytest
 
 test-qlc:
 	@echo "Testing QLC+ connection..."

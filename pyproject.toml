@@ -10,6 +10,14 @@ dependencies = [
     "qlcplus @ git+ssh://git@github.com/joshlebed/qlc-config.git",
 ]
 
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+# src/ is not a package (flat modules imported by name), so put it on the path.
+pythonpath = ["src"]
+testpaths = ["tests"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
