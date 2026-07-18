@@ -40,6 +40,10 @@ target. `make logs` first, then `make test-qlc` / `irsend` / `curl` to isolate.
 - **Foreground debug**: `make debug` (stops the service, runs in fg with logs to
   stdout).
 - **Update qlcplus dep after qlc-config changes**: `make update-qlc`.
+- **Run tests**: `make test` (stdlib-only unit tests, run anywhere). On the Pi,
+  `sudo make test` additionally runs the real-evdev/uinput integration test
+  (needs writable `/dev/uinput`, hence sudo). `make test-deps` installs pytest
+  into the venv first if it's missing.
 
 ## key gotchas
 
@@ -65,11 +69,26 @@ target. `make logs` first, then `make test-qlc` / `irsend` / `curl` to isolate.
 5. **The lircd socket can desync.** If a `send_stop()` races lircd's repeat
    handling (lircd logs `busy: repeating` in `journalctl -u lircd`), the
    client's socket goes permanently out of sync — every later lirc command
-   times out after 5s while a fresh connection (`irsend`) works fine. The
-   retry loop in `volume_control.py` recreates the connection via
-   `fresh_lirc_client()` after every crash, so this now self-heals (~10s dead
-   window). If volume buttons stay dead anyway, `make restart` and check
+   times out after 5s while a fresh connection (`irsend`) works fine. Each
+   device supervisor now catches that `TimeoutError` inline and recreates the
+   connection via `fresh_lirc_client()` without dropping keypad input — no
+   restart, no dead window (previously a desync tore down both read loops for
+   ~10s). If volume buttons stay dead anyway, `make restart` and check
    `/tmp/volume_controller.log` for repeated `TimeoutError`.
+
+6. **Each keypad is supervised independently — keep it that way.**
+   `src/device_supervisor.py` runs one open→read→recover loop per device
+   (`supervise_device`), so unplugging one keypad never stops another. The old
+   design read both devices as sibling tasks in a single `asyncio.TaskGroup`
+   and opened every `evdev.InputDevice()` up front, which coupled their fates:
+   `TaskGroup` cancels siblings on the first exception, and one missing device
+   raised `FileNotFoundError` that aborted the shared restart — so unplugging
+   one keypad killed the other, and the survivor stayed dead until the missing
+   one was replugged. Don't refactor the devices back into a shared read loop
+   or a single up-front open; that reintroduces the bug. `supervise_device`
+   injects its hardware/lirc pieces (imports neither evdev nor lirc), so it's
+   unit-testable off-Pi; `sudo make test` on the Pi also runs a real-uinput
+   unplug/recovery integration test.
 
 ## production-critical reminder
 

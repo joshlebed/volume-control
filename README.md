@@ -52,6 +52,7 @@ make logs-service # Tail systemd journal logs
 ```bash
 make debug       # Stop service and run in foreground
 make run         # Run in foreground (without stopping service)
+make test        # Run the test suite (sudo make test also runs the uinput integration test)
 make test-qlc    # Test QLC+ WebSocket connection
 make update-qlc  # Update qlcplus library from git (use after changes to qlc-config repo)
 ```
