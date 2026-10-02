@@ -9,6 +9,10 @@ from qlcplus import set_mode as qlc_set_mode
 
 from logger import CompoundException, logger
 
+HA_BASE_URL = "http://192.168.0.181:8123"
+HA_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhOWE5YmVkMDQ5YTY0MjUxOGY0OTc1ZTYzMTIxNjA3NCIsImlhdCI6MTY2NjA3MDIyMSwiZXhwIjoxOTgxNDMwMjIxfQ.Dz_oPS2tIup2PB89bi6SFAZHxortQh3kZ5hrw-gWdu4"
+HA_TIMEOUT_SECONDS = 2
+
 
 class RemoteID(StrEnum):
     ONKYO = "onkyo"
@@ -275,14 +279,7 @@ class Remote:
 
     async def toggle_disco_ball_motor(self):
         logger.info("toggling disco ball motor")
-        url = "http://192.168.0.181:8123/api/services/switch/toggle"
-        token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhOWE5YmVkMDQ5YTY0MjUxOGY0OTc1ZTYzMTIxNjA3NCIsImlhdCI6MTY2NjA3MDIyMSwiZXhwIjoxOTgxNDMwMjIxfQ.Dz_oPS2tIup2PB89bi6SFAZHxortQh3kZ5hrw-gWdu4"
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        }
-        data = {"entity_id": "switch.local_disco_ball"}
-        requests.post(url, headers=headers, json=data)
+        await self.call_ha_service("switch", "toggle", "switch.local_disco_ball")
 
     async def toggle_disco_light_fade(self):
         self.send_spotlight_mode("fade")
@@ -303,6 +300,34 @@ class Remote:
         logger.info("toggling TV power")
         await self.send_to_roku_then_sleep(RokuButton.POWER)
 
+    async def call_ha_service(self, domain, service, entity_id):
+        """Fire a Home Assistant service call without ever blocking or killing
+        the keypad loop: runs in a thread, hard 2s timeout, errors logged."""
+
+        def _post():
+            requests.post(
+                f"{HA_BASE_URL}/api/services/{domain}/{service}",
+                headers={
+                    "Authorization": f"Bearer {HA_TOKEN}",
+                    "Content-Type": "application/json",
+                },
+                json={"entity_id": entity_id},
+                timeout=HA_TIMEOUT_SECONDS,
+            )
+
+        try:
+            await asyncio.to_thread(_post)
+        except Exception as error:
+            logger.error(f"HA call {domain}.{service} failed: {error}")
+
+    async def pause_apple_tv(self):
+        await self.call_ha_service(
+            "media_player", "media_play_pause", "media_player.living_room"
+        )
+
     async def pause(self):
-        logger.info("pausing tv")
-        await self.send_to_roku_then_sleep(RokuButton.PLAY_PAUSE)
+        logger.info("pausing tv + apple tv")
+        await asyncio.gather(
+            self.send_to_roku_then_sleep(RokuButton.PLAY_PAUSE),
+            self.pause_apple_tv(),
+        )
