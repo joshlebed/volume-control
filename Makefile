@@ -76,8 +76,8 @@ install: sync
 deploy:
 	@echo "→ git push origin main"
 	git push origin main
-	@echo "→ ssh pi: pull + make restart"
-	ssh pi "cd /home/pi/code/volume-control && git pull --rebase origin main && make restart"
+	@echo "→ ssh pi: pull + make restart + verify active (top-tier service: run 'make debug' on the Pi first for mapping/startup changes)"
+	ssh pi "cd /home/pi/code/volume-control && git pull --rebase origin main && make restart && sleep 3 && systemctl is-active volume_control && echo '✓ volume_control active'"
 
 install-systemd:
 	@echo "Installing systemd service (one-time, run ON the Pi)..."
