@@ -67,17 +67,22 @@ install: sync
 
 # `make deploy` from the laptop = push code + ssh-pull + restart the
 # already-installed systemd service. The standardized verb across all
-# homelab child repos (see homelab/CLAUDE.md).
+# Standard verb shared with the other repos this service is deployed alongside.
 #
 # First-time systemd-unit installation lives in `make install-systemd`
 # below (this used to be the `make deploy` target before 2026-05;
 # `deploy-systemd` is kept as a back-compat alias if you have muscle
 # memory).
+# Deployment target lives in a gitignored deploy.local.mk (see deploy.local.mk.example).
+-include deploy.local.mk
+DEPLOY_HOST ?=
+DEPLOY_DIR ?=
 deploy:
+	@test -n "$(DEPLOY_HOST)" || { echo "set DEPLOY_HOST/DEPLOY_DIR in deploy.local.mk (copy deploy.local.mk.example)"; exit 2; }
 	@echo "→ git push origin main"
 	git push origin main
-	@echo "→ ssh pi: pull + make restart + verify active (top-tier service: run 'make debug' on the Pi first for mapping/startup changes)"
-	ssh pi "cd /home/pi/code/volume-control && git pull --rebase origin main && make restart && sleep 3 && systemctl is-active volume_control && echo '✓ volume_control active'"
+	@echo "→ ssh $(DEPLOY_HOST): pull + make restart + verify active (this is the primary AV control in the house: run 'make debug' there first for mapping/startup changes)"
+	ssh $(DEPLOY_HOST) "cd $(DEPLOY_DIR) && git pull --rebase origin main && make restart && sleep 3 && systemctl is-active volume_control && echo '✓ volume_control active'"
 
 install-systemd:
 	@echo "Installing systemd service (one-time, run ON the Pi)..."
@@ -147,7 +152,7 @@ test-deps:
 
 test-qlc:
 	@echo "Testing QLC+ connection..."
-	@uv run python -c "from qlcplus import QLCPlusClient; c = QLCPlusClient(host='192.168.0.221'); c.connect(); print('Connected to QLC+'); print('Functions:', c.get_functions_list()); c.disconnect()"
+	@uv run python -c "from qlcplus import QLCPlusClient; c = QLCPlusClient(); c.connect(); print('Connected to QLC+'); print('Functions:', c.get_functions_list()); c.disconnect()"
 
 # ============================================================================
 # Process Operations (non-systemd)
@@ -175,7 +180,8 @@ clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 
-# Fast local validators (compose / py / sh syntax). Delegates to homelab's
-# check.sh — single source of truth across child repos.
+# Fast local validators. Uses the shared ../homelab/scripts/check.sh when this
+# repo is checked out alongside it; otherwise a plain py_compile pass.
 check:
-	@../homelab/scripts/check.sh "$(PWD)"
+	@if [ -x ../homelab/scripts/check.sh ]; then ../homelab/scripts/check.sh "$(PWD)"; \
+	else python3 -m py_compile src/*.py && echo "py_compile ok"; fi

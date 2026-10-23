@@ -1,4 +1,6 @@
 config.json
+.env
+deploy.local.mk
 __pycache__
 .venv
 .pytest_cache

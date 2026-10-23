@@ -1,3 +1,4 @@
+import os
 import asyncio
 import traceback
 from enum import Enum, StrEnum
@@ -9,8 +10,8 @@ from qlcplus import set_mode as qlc_set_mode
 
 from logger import CompoundException, logger
 
-HA_BASE_URL = "http://192.168.0.181:8123"
-HA_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhOWE5YmVkMDQ5YTY0MjUxOGY0OTc1ZTYzMTIxNjA3NCIsImlhdCI6MTY2NjA3MDIyMSwiZXhwIjoxOTgxNDMwMjIxfQ.Dz_oPS2tIup2PB89bi6SFAZHxortQh3kZ5hrw-gWdu4"
+HA_BASE_URL = os.environ.get("HA_BASE_URL", "http://localhost:8123")
+HA_TOKEN = os.environ.get("HA_TOKEN", "")  # long-lived access token; set in .env (see .env.example)
 HA_TIMEOUT_SECONDS = 2
 
 
@@ -124,7 +125,7 @@ class Remote:
         try:
             result = qlc_set_mode(mode)
         except QLCPlusError as e:
-            # QLC+ host unreachable (e.g. mediaserver down). Log and carry on —
+            # QLC+ host unreachable (daemon or its host down). Log and carry on —
             # a dead lighting server must never crash the keypad event loop.
             logger.error(f"QLC+ unreachable, spotlight '{mode}' ignored: {e}")
             return False
@@ -279,7 +280,7 @@ class Remote:
 
     async def toggle_disco_ball_motor(self):
         logger.info("toggling disco ball motor")
-        await self.call_ha_service("switch", "toggle", "switch.local_disco_ball")
+        await self.call_ha_service("switch", "toggle", os.environ.get("HA_DISCO_ENTITY", "switch.disco_ball"))
 
     async def toggle_disco_light_fade(self):
         self.send_spotlight_mode("fade")

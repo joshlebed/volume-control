@@ -3,12 +3,6 @@
 Python service that translates keyboard/numpad input into IR commands (via LIRC)
 and lighting control (via QLC+) for home AV equipment.
 
-> **Deployed in the homelab**: runs as a systemd service on `pi`. Sends IR via
-> LIRC to the Onkyo receiver and Roku TV; sends WebSocket commands to the QLC+
-> daemon on `mediaserver` (`192.168.0.221:9999`); sends HTTP commands to Home
-> Assistant on `pi:8123`. Cross-cutting infra docs live in
-> [`homelab`](https://github.com/joshlebed/homelab).
-
 ## Architecture
 
 ```
@@ -26,7 +20,7 @@ and lighting control (via QLC+) for home AV equipment.
                               ▼
 ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
 │  Onkyo Receiver  │  │  Roku TV         │  │  QLC+ Server     │
-│  (IR)            │  │  (IR)            │  │  192.168.0.221   │
+│  (IR)            │  │  (IR)            │  │  (QLCPLUS_HOST)  │
 │                  │  │                  │  │  ↓               │
 │  Volume, Input,  │  │  Navigation,     │  │  ADJ Pinspot     │
 │  Surround Mode   │  │  Power           │  │  Spotlight       │
@@ -66,14 +60,20 @@ python3 -m venv .venv
 make install
 ```
 
-### 2. Deploy systemd service
+### 2. Configure
+
+```bash
+cp .env.example .env && chmod 600 .env   # QLC+ host, Home Assistant URL + token
+```
+
+### 3. Deploy systemd service
 
 ```bash
 make deploy      # Copies service file, enables on boot
 make start       # Start the service
 ```
 
-### 3. (Optional) Shell aliases
+### 4. (Optional) Shell aliases
 
 Add to `~/.zshrc` or `~/.bashrc`:
 
@@ -164,15 +164,15 @@ NUM| / | * |<-         TAB = Spotify dark mode
 
 ### QLC+ (Lighting Control)
 
-- **Host:** 192.168.0.221
+- **Host:** `QLCPLUS_HOST` from `.env`
 - **Port:** 9999 (WebSocket)
 - **Functions:** off(0), white(1), red(2), yellow(3)
 - **Test:** `make test-qlc`
 
 ### Home Assistant (Disco Ball Motor)
 
-- **Host:** 192.168.0.181:8123
-- **Entity:** `switch.local_disco_ball`
+- **Host:** `HA_BASE_URL` from `.env` (token in `HA_TOKEN`)
+- **Entity:** `HA_DISCO_ENTITY` from `.env`
 
 ### LIRC (IR Blaster)
 
@@ -295,7 +295,7 @@ make debug            # Run in foreground to see errors
 
 ```bash
 make test-qlc         # Test connection
-ping 192.168.0.221    # Check network
+ping $QLCPLUS_HOST    # Check network
 ```
 
 Verify QLC+ is running with WebSocket enabled (`-w` flag).

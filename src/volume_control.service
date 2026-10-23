@@ -5,6 +5,8 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/home/pi/code/volume-control
+# Site-specific settings (QLC+ host, Home Assistant URL + token) — gitignored.
+EnvironmentFile=-/home/pi/code/volume-control/.env
 ExecStart=/home/pi/code/volume-control/.venv/bin/python /home/pi/code/volume-control/src/volume_control.py
 Restart=always
 RestartSec=5

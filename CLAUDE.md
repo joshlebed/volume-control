@@ -2,25 +2,16 @@
 
 # agent notes for volume-control
 
-Cross-cutting infra docs (network, hosts, dev workflow, safety rails) live in
-the sibling [`homelab`](https://github.com/joshlebed/homelab) repo.
-If `~/code/homelab` (or `/home/pi/code/homelab` on the Pi) doesn't
-exist, clone it:
-
-```bash
-git clone git@github.com:joshlebed/homelab.git ../homelab
-```
-
 ## deployed on
 
-`pi`, as the `volume_control.service` systemd unit (runs as user `pi`). Reads
+A Raspberry Pi, as the `volume_control.service` systemd unit (runs as user `pi`). Site settings (QLC+ host, Home Assistant URL/token, disco entity) come from the gitignored `.env` via `EnvironmentFile`; `.env.example` lists them. Reads
 raw input from a USB numpad/macropad in `/dev/input/`, translates each keypress
 into one of three downstream actions:
 
 1. **IR commands** via LIRC → Onkyo receiver, Roku TV
-2. **WebSocket commands** → QLC+ daemon on `mediaserver:9999` (consumes the
+2. **WebSocket commands** → the QLC+ daemon at `QLCPLUS_HOST:9999` (consumes the
    `qlcplus` package from the sibling `qlc-config` repo)
-3. **HTTP commands** → Home Assistant on `pi:8123` (e.g. disco-ball motor)
+3. **HTTP commands** → Home Assistant at `HA_BASE_URL` (e.g. disco-ball motor)
 
 ## fan-out into other repos
 
@@ -58,9 +49,8 @@ target. `make logs` first, then `make test-qlc` / `irsend` / `curl` to isolate.
    switch back leaves the IR blaster non-functional.
 
 3. **QLC+ dependency lives on a different host.** WebSocket calls go over LAN to
-   `mediaserver:9999`. If lights stop responding, check the QLC+ service on
-   mediaserver before suspecting this repo
-   (`ssh mediaserver "systemctl status qlcplus"`).
+   `QLCPLUS_HOST:9999`. If lights stop responding, check the QLC+ service on
+   that host before suspecting this repo (`systemctl status qlcplus` there).
 
 4. **Hold-to-repeat keys** (volume up/down) use a different code path than
    press-to-toggle keys. Watch for race conditions when refactoring
@@ -92,8 +82,11 @@ target. `make logs` first, then `make test-qlc` / `irsend` / `curl` to isolate.
 
 ## production-critical reminder
 
+Never commit `.env` or any token: a Home Assistant long-lived token was once
+committed to this public repo (revoked 2026-10-23) — that is why everything
+site-specific is environment-only now.
+
 This service is the primary AV interface in the home — when it's broken, nobody
-can change the volume or switch inputs without finding a phone/laptop. See
-`../homelab/CLAUDE.md` for the full safety-rail policy. Before pushing
+can change the volume or switch inputs without finding a phone/laptop. Before pushing
 changes that affect button mappings or service startup, `make debug` locally on
 the Pi.
